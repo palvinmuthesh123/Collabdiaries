@@ -1,0 +1,152 @@
+org: palvinmuthesh
+
+app: palvinmuthesh
+
+service: palvinmuthesh-user
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-north-1 
+  timeout: 30
+  memorySize: 1024
+  environment:
+    DATABASE_HOST: ${env:DATABASE_HOST}
+    DATABASE_PORT: ${env:DATABASE_PORT}
+    DATABASE_USERNAME: ${env:DATABASE_USERNAME}
+    DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
+    DATABASE_NAME: ${env:DATABASE_NAME}
+    JWT_SECRET: ${env:JWT_SECRET}
+    AWSREGION: ${env:AWSREGION}
+    AWS_ACCESS_KEYID: ${env:AWS_ACCESS_KEYID}
+    AWS_SECRET_ACCESSKEY: ${env:AWS_SECRET_ACCESSKEY}
+    AWS_BUCKET_NAME: ${env:AWS_BUCKET_NAME}
+    AWS_CLOUDFRONT_URL: ${env:AWS_CLOUDFRONT_URL}
+    FIREBASE_PROJECT_ID: ${env:FIREBASE_PROJECT_ID}
+    FIREBASE_PRIVATE_KEY: ${env:FIREBASE_PRIVATE_KEY}
+    FIREBASE_CLIENT_EMAIL: ${env:FIREBASE_CLIENT_EMAIL}
+
+functions:
+  api:
+    handler: dist-lambda/lambda.handler 
+    timeout: 30
+    memorySize: 1024
+    events:
+      - http:
+          method: any
+          path: /users/presigned-url
+      - http:
+          method: any
+          path: /auth/login_test
+      - http:
+          method: any
+          path: /auth/login-firebase
+      - http:
+          method: any
+          path: /users/registration
+      - http:
+          method: any
+          path: /users/registration/{id}
+      - http:
+          method: any
+          path: /users/brand-details
+      - http:
+          method: any
+          path: /users/brand-details/{id}
+      - http:
+          method: any
+          path: /category
+      - http:
+          method: any
+          path: /category/{id}
+      - http:
+          method: any
+          path: /city
+      - http:
+          method: any
+          path: /city/{id}
+      - http:
+          method: any
+          path: /country
+      - http:
+          method: any
+          path: /country/{id}
+      - http:
+          method: any
+          path: /state
+      - http:
+          method: any
+          path: /state/{id}
+      - http:
+          method: any
+          path: /perks
+      - http:
+          method: any
+          path: /perks/{id}
+      - http:
+          method: any
+          path: /users/user-cover-photos
+      - http:
+          method: any
+          path: /users/user-cover-photos/{id}
+      - http:
+          method: any
+          path: /users/identity-detail
+      - http:
+          method: any
+          path: /users/identity-detail/{id}
+      - http:
+          method: any
+          path: /users/identity-locations
+      - http:
+          method: any
+          path: /users/identity-locations/{id}
+      - http:
+          method: any
+          path: /bids/createBid
+      - http:
+          method: any
+          path: /bids/negotiation
+      - http:
+          method: any
+          path: /bids
+      - http:
+          method: any
+          path: /bids/negotiation/{id}
+      - http:
+          method: any
+          path: /bids/userNegotiation/{id}
+      - http:
+          method: any
+          path: /bids/{id}
+      - http:
+          method: any
+          path: /bids/userBids/{id}
+
+package:
+  individually: true
+  include:
+    - src/**
+  exclude:
+    - node_modules/aws-sdk
+
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: 'node20'
+    platform: 'node'
+    external:
+      - aws-sdk
+      - '@nestjs/microservices'
+      - '@nestjs/websockets/socket-module'
+      - '@nestjs/microservices/microservices-module'
+      - 'class-transformer/storage'
+
+plugins:
+  - 'serverless-jetpack'
+  - serverless-offline
+
+resources:
+  Resources: {}

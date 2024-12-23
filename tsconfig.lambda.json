@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "./dist-lambda",
+    "noEmit": false
+  },
+  "include": ["src/lambda.ts"]
+}
