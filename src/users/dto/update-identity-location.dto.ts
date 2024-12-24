@@ -43,13 +43,13 @@ export class UpdateIdentityLocationDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  latitude?: number;
+  @IsString()
+  latitude?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  longitude?: number;
+  @IsString()
+  longitude?: string;
 
   @ApiProperty()
   @IsOptional()

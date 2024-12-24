@@ -27,6 +27,11 @@ export enum DealType {
   Unpaid = 'Unpaid',
 }
 
+export enum BrandMode {
+  Online = 'Online',
+  Offline = 'Offline',
+}
+
 export enum UserType {
   Brand = 'Brand',
   CollabUser = 'CollabUser',

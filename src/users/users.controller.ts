@@ -101,6 +101,21 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('nearby-influencer')
+  @ApiOperation({ summary: 'Fetching all identity location' })
+  async findAllNearbyInfluencer(
+    @Query('latitude') latitude: string,
+    @Query('longitude') longitude: string,
+  ): Promise<IdentityLocation[]> {
+    const userLat = parseFloat(latitude);
+    const userLon = parseFloat(longitude);
+    if (isNaN(userLat) || isNaN(userLon)) {
+      throw new BadRequestException('Invalid latitude or longitude');
+    }
+    return this.usersService.findAllNearbyInfluencer(userLat, userLon);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('identity-locations/:id')
   @ApiOperation({ summary: 'Fetching identity location by id' })
   async findOneIdentityLocation(
@@ -187,6 +202,39 @@ export class UsersController {
   @ApiOperation({ summary: 'Fetching all brand details' })
   async findAllBrandDetail(): Promise<BrandDetail[]> {
     return this.usersService.findAllBrandDetail();
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  // @Get('brand-detail/:id')
+  // @ApiOperation({ summary: 'Fetching all paid brand details' })
+  // async findAllPaidBrandDetail(
+  //   @Param('id') id: string,
+  // ): Promise<BrandDetail[]> {
+  //   return this.usersService.findAllPaidBrandDetail(id);
+  // }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('brandDetails/:id')
+  @ApiOperation({ summary: 'Fetching all brand details by params' })
+  async findAllBrandsDetail(
+    @Param('id') id: string,
+  ): Promise<BrandDetail[]> {
+    return this.usersService.findAllBrandsDetail(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('brandByLocation')
+  @ApiOperation({ summary: 'Fetching all Nearby brand details' })
+  async findAllNearbyBrandDetail(
+    @Query('latitude') latitude: string,
+    @Query('longitude') longitude: string,
+  ): Promise<BrandDetail[]> {
+    const userLat = parseFloat(latitude);
+    const userLon = parseFloat(longitude);
+    if (isNaN(userLat) || isNaN(userLon)) {
+      throw new BadRequestException('Invalid latitude or longitude');
+    }
+    return this.usersService.findAllNearbyBrandDetail(userLat, userLon);
   }
 
   @UseGuards(JwtAuthGuard)

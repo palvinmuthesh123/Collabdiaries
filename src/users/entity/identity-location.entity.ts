@@ -18,6 +18,12 @@ export class IdentityLocation {
   @PrimaryGeneratedColumn('uuid')
   identity_location_id: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  identity_id: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  registration_id: string;
+
   @ManyToOne(
     () => IdentityDetail,
     (identityDetail) => identityDetail.identitylocation,
@@ -70,11 +76,20 @@ export class IdentityLocation {
   @Column({ type: 'text', nullable: true })
   landmark: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
-  latitude: number;
+  @Column({ type: 'text', nullable: true })
+  latitude: string;
 
-  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
-  longitude: number;
+  @Column({ type: 'text', nullable: true })
+  country_id: string;
+
+  @Column({ type: 'text', nullable: true })
+  state_id: string;
+
+  @Column({ type: 'text', nullable: true })
+  city_id: string;
+
+  @Column({ type: 'text', nullable: true })
+  longitude: string;
 
   @Column({ type: 'boolean', default: true })
   is_current_location: boolean;

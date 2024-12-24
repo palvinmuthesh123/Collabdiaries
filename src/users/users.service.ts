@@ -42,7 +42,7 @@ export class UsersService {
   }
 
   async findAllRegistration(): Promise<Registration[]> {
-    return this.registrationRepository.find();
+    return this.registrationRepository.find({relations: ['identityDetails'],});
   }
 
   async findOneRegistration(id: string): Promise<Registration> {
@@ -76,6 +76,39 @@ export class UsersService {
 
   async findAllIdentityLocation(): Promise<IdentityLocation[]> {
     return await this.identityLocationRepository.find();
+  }
+
+  async findAllNearbyInfluencer(
+    userLat: number,
+    userLon: number,
+    radius: number = 20,
+  ): Promise<IdentityLocation[]> {
+    const query = this.identityLocationRepository
+    .createQueryBuilder('identityLocation')
+    .addSelect(
+      `6371 * acos(
+        cos(radians(:userLat)) *
+        cos(radians(CAST(identityLocation.latitude AS double precision))) *
+        cos(radians(CAST(identityLocation.longitude AS double precision)) - radians(:userLon)) +
+        sin(radians(:userLat)) *
+        sin(radians(CAST(identityLocation.latitude AS double precision)))
+      )`,
+      'distance',
+    )
+    .where(
+      `6371 * acos(
+        cos(radians(:userLat)) *
+        cos(radians(CAST(identityLocation.latitude AS double precision))) *
+        cos(radians(CAST(identityLocation.longitude AS double precision)) - radians(:userLon)) +
+        sin(radians(:userLat)) *
+        sin(radians(CAST(identityLocation.latitude AS double precision)))
+      ) <= :radius`,
+    )
+    .setParameters({ userLat, userLon, radius })
+    .leftJoinAndSelect('identityLocation.identity_detail', 'identityDetail') // Include IdentityDetail relation
+    .leftJoinAndSelect('identityLocation.registration', 'registration') // Include Registration relation
+    .orderBy('distance', 'ASC');
+    return await query.getMany();
   }
 
   async findOneIdentityLocation(id: string): Promise<IdentityLocation> {
@@ -154,16 +187,74 @@ export class UsersService {
     return this.brandDetailRepository.save(newBrandDetail);
   }
 
+  async findAllBrandsDetail(id: string): Promise<BrandDetail[]> {
+    let whereParams = {}
+    switch(id) {
+      case 'paid':
+        Object.assign(whereParams, {paid: true});
+        break;
+      case 'unpaid':
+        Object.assign(whereParams, {paid: false});
+        break;
+      case 'barter':
+        Object.assign(whereParams, {barter: true});
+        break;
+      default:
+        break;
+    }
+    return this.brandDetailRepository.find({
+      where: whereParams,
+      // relations: ['identityDetail', 'registration', 'category'],
+      relations: ['identityDetail', 'registration'],
+    });
+  }
+
+  async findAllNearbyBrandDetail(
+    userLat: number,
+    userLon: number,
+    radius: number = 20,
+  ): Promise<BrandDetail[]> {
+    const query = this.brandDetailRepository
+      .createQueryBuilder('brandDetail')
+      .addSelect(
+        `6371 * acos(
+            cos(radians(:userLat)) *
+            cos(radians(CAST(brandDetail.latitude AS double precision))) *
+            cos(radians(CAST(brandDetail.longitude AS double precision)) - radians(:userLon)) +
+            sin(radians(:userLat)) *
+            sin(radians(CAST(brandDetail.latitude AS double precision)))
+        )`,
+        'distance',
+      )
+      .where(
+        `6371 * acos(
+            cos(radians(:userLat)) *
+            cos(radians(CAST(brandDetail.latitude AS double precision))) *
+            cos(radians(CAST(brandDetail.longitude AS double precision)) - radians(:userLon)) +
+            sin(radians(:userLat)) *
+            sin(radians(CAST(brandDetail.latitude AS double precision)))
+        ) <= :radius`,
+      )
+      .setParameters({ userLat, userLon, radius })
+      .leftJoinAndSelect('brandDetail.identityDetail', 'identityDetail') // Load identityDetail relation
+      .leftJoinAndSelect('brandDetail.registration', 'registration') // Load registration relation
+      .orderBy('distance', 'ASC');
+  
+    return await query.getMany();
+  }
+
   async findAllBrandDetail(): Promise<BrandDetail[]> {
     return this.brandDetailRepository.find({
-      relations: ['identityDetail', 'registration', 'category'],
+      // relations: ['identityDetail', 'registration', 'category'],
+      relations: ['identityDetail', 'registration'],
     });
   }
 
   async findOneBrandDetail(id: string): Promise<BrandDetail> {
     const brandDetail = await this.brandDetailRepository.findOne({
       where: { brand_id: id },
-      relations: ['identityDetail', 'registration', 'category'],
+      // relations: ['identityDetail', 'registration', 'category'],
+      relations: ['identityDetail', 'registration'],
     });
     if (!brandDetail) {
       throw new NotFoundException('Brand detail not found');
@@ -179,7 +270,8 @@ export class UsersService {
     await this.brandDetailRepository.update(id, updateBrandDetailDto);
     return this.brandDetailRepository.findOne({
       where: { brand_id: id },
-      relations: ['identityDetail', 'registration', 'category'],
+      // relations: ['identityDetail', 'registration', 'category'],
+      relations: ['identityDetail', 'registration'],
     });
   }
 

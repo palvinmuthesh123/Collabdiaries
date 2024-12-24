@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateStateDto {
   @ApiProperty()
-  @IsUUID()
+  // @IsUUID()
   @IsOptional()
   country_id?: string; // Optional field
 

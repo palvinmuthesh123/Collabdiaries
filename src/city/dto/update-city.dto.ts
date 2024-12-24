@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UpdateCityDto {
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  // @IsUUID()
   state_id?: string; // Optional field
 
   @ApiProperty()
