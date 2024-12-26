@@ -6,10 +6,10 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { BrandDetail } from '../entity/brand-detail.entity';
-import { IdentityDetail } from '../entity/identity-detail.entity';
-import { UserCoverPhoto } from '../entity/user-coverphoto.entity';
-import { IdentityLocation } from '../entity/identity-location.entity';
+import { BrandDetail } from './brand-detail.entity';
+import {IdentityDetail, UserStatus} from './identity-detail.entity';
+import { UserCoverPhoto } from './user-coverphoto.entity';
+import { IdentityLocation } from './identity-location.entity';
 
 @Entity('registration')
 export class Registration {
@@ -54,6 +54,12 @@ export class Registration {
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updated_date: Date;
+
+  @Column({ type: 'enum', enum: UserStatus, default: UserStatus.active })
+  status: UserStatus;
+
+  @Column({ type: 'boolean', default: false })
+  is_deleted: boolean;
 
   // Relationships
   @OneToMany(() => BrandDetail, (brandDetail) => brandDetail.registration)

@@ -5,6 +5,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './config/http-exception.filter';
 import { ResponseInterceptor } from './config/response.interceptor';
 import * as dotenv from 'dotenv';
+import logger from "@vendia/serverless-express/src/logger";
+import {ConfigService} from "@nestjs/config";
 
 async function bootstrap() {
   dotenv.config();
@@ -32,6 +34,6 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, document);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000,()=>console.log(`Server started on port ${process.env.PORT}`));
 }
 bootstrap();

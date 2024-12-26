@@ -31,6 +31,7 @@ import { UserCoverPhoto } from './entity/user-coverphoto.entity';
 import { S3Service } from '../utils/s3.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { UpdateStatusDto} from "../common/common-dto";
 
 @ApiTags('users')
 @Controller('users')
@@ -78,10 +79,27 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Put('update-registration-status/:id')
+  @ApiOperation({ summary: 'Status Updating registration' })
+  async updateRegistrationStatus(
+      @Param('id') id: string,
+      @Body() updateRegistrationStatusDto: UpdateStatusDto,
+  ): Promise<Registration> {
+    return this.usersService.updateRegistrationStatus(id, updateRegistrationStatusDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('registration/:id')
   @ApiOperation({ summary: 'Delete a registration data or user' })
   removeRegistration(@Param('id') id: string): Promise<void> {
     return this.usersService.removeRegistration(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('registration-soft-delete/:id')
+  @ApiOperation({ summary: 'Soft Deleting registration' })
+  async softDeleteRegistration(@Param('id') id: string): Promise<boolean> {
+    return this.usersService.softDeleteRegistration(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -182,10 +200,27 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Put('update-identity-detail-status/:id')
+  @ApiOperation({ summary: 'Status Updating identity details' })
+  async updateIdentityDetailStatus(
+      @Param('id') id: string,
+      @Body() updateIdentityDetailsStatusDto: UpdateStatusDto,
+  ): Promise<IdentityDetail> {
+    return this.usersService.updateIdentityDetailStatus(id, updateIdentityDetailsStatusDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('identity-detail/:id')
   @ApiOperation({ summary: 'Deleting identity detail' })
   async removeIdentityDetail(@Param('id') id: string): Promise<void> {
     return this.usersService.removeIdentityDetail(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('identity-detail-soft-delete/:id')
+  @ApiOperation({ summary: 'Soft Deleting identity detail' })
+  async softDeleteIdentityDetail(@Param('id') id: string): Promise<boolean> {
+    return this.usersService.softDeleteIdentityDetail(id);
   }
 
   @UseGuards(JwtAuthGuard)

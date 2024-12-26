@@ -7,8 +7,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { IdentityDetail } from '../entity/identity-detail.entity';
-import { Registration } from '../entity/registration.entity';
+import { IdentityDetail } from './identity-detail.entity';
+import { Registration } from './registration.entity';
 import { Country } from '../../country/country.entity';
 import { State } from '../../state/state.entity';
 import { City } from '../../city/city.entity';

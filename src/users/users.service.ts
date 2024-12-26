@@ -1,21 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateBrandDetailDto } from './dto/create-brand-detail.dto';
-import { UpdateBrandDetailDto } from './dto/update-brand-detail.dto';
-import { CreateIdentityDetailDto } from './dto/create-identity-detail.dto';
-import { UpdateIdentityDetailDto } from './dto/update-identity-detail.dto';
-import { CreateIdentityLocationDto } from './dto/create-identity-location.dto';
-import { UpdateIdentityLocationDto } from './dto/update-identity-location.dto';
-import { CreateUserCoverPhotoDto } from './dto/create-user-coverphoto.dto';
-import { UpdateUserCoverPhotoDto } from './dto/update-user-coverphoto.dto';
-import { CreateRegistrationsDto } from './dto/create-registration.dto';
-import { UpdateRegistrationsDto } from './dto/update-registration.dto';
-import { BrandDetail } from './entity/brand-detail.entity';
-import { IdentityDetail } from './entity/identity-detail.entity';
-import { IdentityLocation } from './entity/identity-location.entity';
-import { Registration } from './entity/registration.entity';
-import { UserCoverPhoto } from './entity/user-coverphoto.entity';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {In, Repository} from 'typeorm';
+import {CreateBrandDetailDto} from './dto/create-brand-detail.dto';
+import {UpdateBrandDetailDto} from './dto/update-brand-detail.dto';
+import {CreateIdentityDetailDto} from './dto/create-identity-detail.dto';
+import {UpdateIdentityDetailDto} from './dto/update-identity-detail.dto';
+import {CreateIdentityLocationDto} from './dto/create-identity-location.dto';
+import {UpdateIdentityLocationDto} from './dto/update-identity-location.dto';
+import {CreateUserCoverPhotoDto} from './dto/create-user-coverphoto.dto';
+import {UpdateUserCoverPhotoDto} from './dto/update-user-coverphoto.dto';
+import {CreateRegistrationsDto} from './dto/create-registration.dto';
+import {UpdateRegistrationsDto} from './dto/update-registration.dto';
+import {BrandDetail} from './entity/brand-detail.entity';
+import {IdentityDetail, UserStatus} from './entity/identity-detail.entity';
+import {IdentityLocation} from './entity/identity-location.entity';
+import {Registration} from './entity/registration.entity';
+import {UserCoverPhoto} from './entity/user-coverphoto.entity';
+import {UpdateStatusDto} from "../common/common-dto";
 
 @Injectable()
 export class UsersService {
@@ -41,28 +42,66 @@ export class UsersService {
     return this.registrationRepository.save(registration);
   }
 
+  async commonFindOneRegistrationWithSafetyConditions(id:string): Promise<Registration>{
+    const registerUser = await this.registrationRepository.findOne({
+      where: { registration_id: id,is_deleted:false }
+    })
+    if (!registerUser) {
+      throw new NotFoundException(`Registration with ID ${id} not found`);
+    }
+    if (registerUser.status === UserStatus.disable){ throw new NotFoundException(`Registration with ID ${id} status is disable`);}
+    return registerUser;
+  }
+
   async findAllRegistration(): Promise<Registration[]> {
-    return this.registrationRepository.find({relations: ['identityDetails'],});
+    return this.registrationRepository.find({
+      where: {is_deleted:false,status:In([UserStatus.active,UserStatus.hold,UserStatus.disable])},relations: ['identityDetails'],
+    });
   }
 
   async findOneRegistration(id: string): Promise<Registration> {
-    return this.registrationRepository.findOneBy({ registration_id: id });
+    const registerUser = await this.registrationRepository.findOne({
+      where: { registration_id: id,is_deleted:false },relations:['identityDetails']
+    });
+    if (registerUser) return registerUser
+    throw new NotFoundException(`Registration with ID ${id} not found`);
   }
 
   async updateRegistration(
     id: string,
     updateRegistrationDto: UpdateRegistrationsDto,
   ): Promise<Registration> {
-    const user = await this.registrationRepository.findOneBy({ registration_id: id });
-    if(!user) {
+    const user = await this.commonFindOneRegistrationWithSafetyConditions(id)
+    if(user) {
+      await this.registrationRepository.update(id, updateRegistrationDto);
+      return this.findOneRegistration(id);
+    }
+  }
+
+  async updateRegistrationStatus(
+      id: string,
+      updateRegistrationStatusDto: UpdateStatusDto,
+  ): Promise<Registration> {
+    const registerUser = await this.registrationRepository.findOne({
+      where: { registration_id: id },
+    });
+    if (!registerUser) {
       throw new NotFoundException(`Registration with ID ${id} not found`);
     }
-    await this.registrationRepository.update(id, updateRegistrationDto);
-    return this.findOneRegistration(id);
+    Object.assign(registerUser, updateRegistrationStatusDto);
+    return this.identityDetailRepository.save(registerUser);
   }
 
   async removeRegistration(id: string): Promise<void> {
     await this.registrationRepository.delete(id);
+  }
+
+  async softDeleteRegistration(id: string): Promise<boolean> {
+    const softDelete = await this.registrationRepository.update(id, { is_deleted: true });
+    if (softDelete){
+      await this.softDeleteAllIdentityDetailsWithRegistration(id)
+      return true
+    } throw new NotFoundException(`Registration with ID ${id} not found`);
   }
 
   async createIdentityLocation(
@@ -144,9 +183,20 @@ export class UsersService {
     return this.identityDetailRepository.save(identityDetail);
   }
 
+  async commonFindOneIdentityDetailWithSafetyConditions(id:string): Promise<IdentityDetail>{
+    const identityDetail = await this.identityDetailRepository.findOne({
+      where: { identity_id: id,is_deleted:false }
+    })
+    if (!identityDetail) {
+      throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
+    }
+    if (identityDetail.status === UserStatus.disable){ throw new NotFoundException(`IdentityDetail with ID ${id} status is disable`);}
+    return identityDetail;
+  }
+
   async findOneIdentityDetail(id: string): Promise<IdentityDetail> {
     const identityDetail = await this.identityDetailRepository.findOne({
-      where: { identity_id: id },
+      where: { identity_id: id,is_deleted:false },relations: ['identitylocation'],
     });
     if (!identityDetail) {
       throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
@@ -158,12 +208,23 @@ export class UsersService {
     id: string,
     updateIdentityDetailDto: UpdateIdentityDetailDto,
   ): Promise<IdentityDetail> {
-    const identityDetail = await this.identityDetailRepository.findOne({
-      where: { identity_id: id },
-    }); // Check if it exists
-
+    const identityDetail = await this.commonFindOneIdentityDetailWithSafetyConditions(id)
     Object.assign(identityDetail, updateIdentityDetailDto);
     return this.identityDetailRepository.save(identityDetail);
+  }
+
+  async updateIdentityDetailStatus(
+      id: string,
+      updateIdentityDetailsStatusDto: UpdateStatusDto,
+  ): Promise<IdentityDetail> {
+    const identityDetail = await this.identityDetailRepository.findOne({
+      where: { identity_id: id },
+    });
+    if (!identityDetail) {
+      throw new NotFoundException(`Identity detail with ID ${id} not found`);
+    }
+    Object.assign(identityDetail, updateIdentityDetailsStatusDto);
+     return this.identityDetailRepository.save(identityDetail);
   }
 
   async removeIdentityDetail(id: string): Promise<void> {
@@ -173,9 +234,27 @@ export class UsersService {
     await this.identityDetailRepository.remove(identityDetail);
   }
 
+  async softDeleteAllIdentityDetailsWithRegistration(
+      registrationId: string,
+  ): Promise<void> {
+    await this.identityDetailRepository.update(
+        { registration_id: registrationId }, // Update where registration_id is in the list
+        { is_deleted: true },
+    );
+  }
+
+
+
+  async softDeleteIdentityDetail(id: string): Promise<boolean> {
+    const softDelete = await this.identityDetailRepository.update(id, { is_deleted: true });
+   if (!softDelete) throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
+    return true
+  }
+
+
   async findAllIdentityDetail(id: string): Promise<IdentityDetail[]> {
     return this.identityDetailRepository.find({
-      where: { registration_id: id },
+      where: { registration_id: id,is_deleted:false,status:In([UserStatus.active,UserStatus.hold,UserStatus.disable]) }
     });
   }
 

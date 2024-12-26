@@ -11,7 +11,7 @@ export class Perks {
   @PrimaryGeneratedColumn('uuid')
   perks_id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'char', nullable:true })
   perks_name: string;
 
   @Column({ type: 'text' })

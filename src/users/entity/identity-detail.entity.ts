@@ -8,10 +8,10 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { BrandDetail } from '../entity/brand-detail.entity';
-import { Registration } from '../entity/registration.entity';
-import { IdentityLocation } from '../entity/identity-location.entity';
-import { UserCoverPhoto } from '../entity/user-coverphoto.entity';
+import { BrandDetail } from './brand-detail.entity';
+import { Registration } from './registration.entity';
+import { IdentityLocation } from './identity-location.entity';
+import { UserCoverPhoto } from './user-coverphoto.entity';
 import { Bid } from '../../bidding/entity/bid.entity';
 import { SocialIdentityCount } from '../../social/entity/social-identity-count.entity';
 import { CollabIdentityCount } from '../../social/entity/collab-identity-count.entity';
@@ -30,6 +30,13 @@ export enum DealType {
 export enum BrandMode {
   Online = 'Online',
   Offline = 'Offline',
+}
+
+export enum UserStatus {
+  active = 'active',
+  hold = 'hold',
+  hide = 'hide',
+  disable = 'disable',
 }
 
 export enum UserType {
@@ -80,6 +87,12 @@ export class IdentityDetail {
 
   @Column({ length: 100, nullable: true })
   weblink: string;
+
+  @Column({ type: 'enum', enum: UserStatus, default: UserStatus.active })
+  status: UserStatus;
+
+  @Column({ type: 'boolean', default: false })
+  is_deleted: boolean;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_date: Date;
