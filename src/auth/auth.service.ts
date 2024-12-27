@@ -1,10 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { FirebaseService } from './firebase.service';
-import { Registration } from '../users/entity/registration.entity';
-import { IdentityDetail } from '../users/entity/identity-detail.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {Injectable, UnauthorizedException} from '@nestjs/common';
+import {JwtService} from '@nestjs/jwt';
+import {FirebaseService} from './firebase.service';
+import {Registration} from '../users/entity/registration.entity';
+import {IdentityDetail} from '../users/entity/identity-detail.entity';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {NotificationSetting} from "../notification/entities/notification-setting.entity";
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,8 @@ export class AuthService {
     private readonly registrationRepository: Repository<Registration>,
     @InjectRepository(IdentityDetail)
     private readonly identityDetailRepository: Repository<IdentityDetail>,
+    @InjectRepository(NotificationSetting)
+    private readonly notificationSettingRepository: Repository<NotificationSetting>,
     private readonly jwtService: JwtService,
     private readonly firebaseService: FirebaseService,
   ) {}
@@ -38,6 +41,12 @@ export class AuthService {
           registration_id: user.registration_id,
         });
         await this.identityDetailRepository.save(createIdentityDetail);
+
+        // Create notification setting of every identity
+        const createIdentityNotificationSetting =  this.notificationSettingRepository.create({
+          identity_id:createIdentityDetail.identity_id
+        })
+        await this.notificationSettingRepository.save(createIdentityNotificationSetting);
       }
 
       const jwtToken = this.jwtService.sign({

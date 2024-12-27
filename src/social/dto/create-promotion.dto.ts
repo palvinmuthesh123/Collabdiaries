@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsUUID, IsString, IsNumber } from 'class-validator';
+import {IsNotEmpty, IsUUID, IsString, IsNumber, IsEnum, IsOptional} from 'class-validator';
+import {LinkType} from "../../common/enum";
 
 export class CreatePromotionDto {
   @IsNotEmpty()
@@ -28,6 +29,11 @@ export class CreatePromotionDto {
   @IsNotEmpty()
   @IsString()
   type_id: string;
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(LinkType)
+  link_type: LinkType;
 
   @IsNotEmpty()
   @IsNumber()

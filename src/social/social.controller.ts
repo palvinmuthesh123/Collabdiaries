@@ -44,6 +44,13 @@ export class SocialController {
     return this.socialService.createCollabFollowing(createDto);
   }
 
+  @Post('save-social-details')
+  async saveSocialDetails(
+    @Body() content: { type: 'youtube' | 'instagram' ; channelId: string; username: string; identityId: string }
+  ) {
+    return this.socialService.saveSocialDetails(content);
+  }
+
   @Put('collab-following-detail/:id')
   async updateCollabFollowing(
     @Param('id') id: string,
@@ -190,6 +197,13 @@ export class SocialController {
     @Param('id') id: string,
   ): Promise<SocialIdentityCount> {
     return this.socialService.findOneSocialIdentityCount(id);
+  }
+
+  @Get('is-influencer/:id')
+  async findSocialByIdentityId(
+    @Param('id') id: string,
+  ): Promise<any> {
+    return this.socialService.findSocialByIdentityId(id);
   }
 
   @Delete('social-identity-count/:id')

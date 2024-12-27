@@ -1,4 +1,5 @@
-import { IsOptional, IsUUID, IsString, IsNumber } from 'class-validator';
+import {IsOptional, IsUUID, IsString, IsNumber, IsEnum} from 'class-validator';
+import {LinkType} from "../../common/enum";
 
 export class UpdatePromotionDto {
   @IsOptional()
@@ -24,6 +25,11 @@ export class UpdatePromotionDto {
   @IsOptional()
   @IsString()
   type?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(LinkType)
+  link_type: LinkType;
 
   @IsOptional()
   @IsString()

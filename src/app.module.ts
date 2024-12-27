@@ -11,6 +11,8 @@ import { PerksModule } from './perks/perks.module';
 import { UsersModule } from './users/users.module';
 import { BiddingModule } from './bidding/bidding.module';
 import { SocialModule } from './social/social.module';
+import { NotificationModule } from './notification/notification.module';
+import { ReferralModule } from './referral/referral.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { SocialModule } from './social/social.module';
     PerksModule,
     BiddingModule,
     SocialModule,
+    NotificationModule,
+    ReferralModule,
   ],
   controllers: [AppController],
   providers: [AppService],

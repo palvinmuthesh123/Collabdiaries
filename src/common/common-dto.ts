@@ -1,6 +1,6 @@
 import {ApiProperty} from "@nestjs/swagger";
 import {IsEnum} from "class-validator";
-import {UserStatus} from "../users/entity/identity-detail.entity";
+import {UserStatus} from "./enum";
 
 export class UpdateStatusDto {
     @ApiProperty()

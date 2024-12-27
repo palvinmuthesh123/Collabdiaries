@@ -11,9 +11,9 @@ export class CreateSocialIdentityCountDto {
 
   @IsOptional()
   @IsNumber()
-  following_count?: number;
+  following_count: number;
 
   @IsOptional()
   @IsNumber()
-  engagement_rate?: number;
+  engagement_rate: number;
 }

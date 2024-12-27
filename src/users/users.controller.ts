@@ -1,37 +1,38 @@
 import {
-  Controller,
-  Get,
-  Post,
+  BadRequestException,
   Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
   Patch,
+  Post,
   Put,
   Query,
-  Param,
-  Delete,
-  UseGuards,
-  BadRequestException,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { UsersService } from './users.service';
-import { CreateBrandDetailDto } from './dto/create-brand-detail.dto';
-import { UpdateBrandDetailDto } from './dto/update-brand-detail.dto';
-import { CreateIdentityDetailDto } from './dto/create-identity-detail.dto';
-import { UpdateIdentityDetailDto } from './dto/update-identity-detail.dto';
-import { CreateIdentityLocationDto } from './dto/create-identity-location.dto';
-import { UpdateIdentityLocationDto } from './dto/update-identity-location.dto';
-import { UpdateRegistrationsDto } from './dto/update-registration.dto';
-import { CreateUserCoverPhotoDto } from './dto/create-user-coverphoto.dto';
-import { UpdateUserCoverPhotoDto } from './dto/update-user-coverphoto.dto';
-import { IdentityLocation } from './entity/identity-location.entity';
-import { IdentityDetail } from './entity/identity-detail.entity';
-import { BrandDetail } from './entity/brand-detail.entity';
-import { Registration } from './entity/registration.entity';
-import { UserCoverPhoto } from './entity/user-coverphoto.entity';
-import { S3Service } from '../utils/s3.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { UpdateStatusDto} from "../common/common-dto";
+import {ConfigService} from '@nestjs/config';
+import {UsersService} from './users.service';
+import {CreateBrandDetailDto} from './dto/create-brand-detail.dto';
+import {UpdateBrandDetailDto} from './dto/update-brand-detail.dto';
+import {CreateIdentityDetailDto} from './dto/create-identity-detail.dto';
+import {UpdateIdentityDetailDto} from './dto/update-identity-detail.dto';
+import {CreateIdentityLocationDto} from './dto/create-identity-location.dto';
+import {UpdateIdentityLocationDto} from './dto/update-identity-location.dto';
+import {UpdateRegistrationsDto} from './dto/update-registration.dto';
+import {CreateUserCoverPhotoDto} from './dto/create-user-coverphoto.dto';
+import {UpdateUserCoverPhotoDto} from './dto/update-user-coverphoto.dto';
+import {IdentityLocation} from './entity/identity-location.entity';
+import {IdentityDetail} from './entity/identity-detail.entity';
+import {BrandDetail} from './entity/brand-detail.entity';
+import {Registration} from './entity/registration.entity';
+import {UserCoverPhoto} from './entity/user-coverphoto.entity';
+import {S3Service} from '../utils/s3.service';
+import {JwtAuthGuard} from '../auth/jwt-auth.guard';
+import {ApiOperation, ApiTags} from '@nestjs/swagger';
+import {UpdateStatusDto} from "../common/common-dto";
+import {UpdateBrandOwnershipDto} from "./dto/update-brand-ownership";
 
 @ApiTags('users')
 @Controller('users')
@@ -290,6 +291,16 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Put(':brandId/transfer-ownership')
+  @ApiOperation({ summary: 'Ownership of brand transferred to other user' })
+  async transferOwnership(
+      @Param('brandId') brandId: string,
+      @Body('newOwnerDetails') newOwnerDetails: UpdateBrandOwnershipDto,
+  ): Promise<string> {
+    return await this.usersService.transferBrandOwnership( newOwnerDetails);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('brand-detail/:id')
   @ApiOperation({ summary: 'Deleting brand details' })
   async removeBrandDetail(@Param('id') id: string): Promise<void> {
@@ -307,14 +318,14 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('user-cover-photos')
-  @ApiOperation({ summary: 'Fetching list of all user coverphoto' })
+  @ApiOperation({ summary: 'Fetching list of all user cover photo' })
   async findAllUserCoverPhoto(): Promise<UserCoverPhoto[]> {
     return this.usersService.findAllUserCoverPhoto();
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('user-cover-photos/:id')
-  @ApiOperation({ summary: 'Fetching single user coverphoto by id' })
+  @ApiOperation({ summary: 'Fetching single user cover photo by id' })
   async findOneUserCoverPhoto(
     @Param('id') id: string,
   ): Promise<UserCoverPhoto> {

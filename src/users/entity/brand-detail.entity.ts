@@ -6,8 +6,6 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
 } from 'typeorm';
 import { Category } from '../../category/category.entity';
 import { BrandMode, DealType, IdentityDetail } from '../entity/identity-detail.entity';

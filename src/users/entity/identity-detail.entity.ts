@@ -1,25 +1,29 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { BrandDetail } from './brand-detail.entity';
-import { Registration } from './registration.entity';
-import { IdentityLocation } from './identity-location.entity';
-import { UserCoverPhoto } from './user-coverphoto.entity';
-import { Bid } from '../../bidding/entity/bid.entity';
-import { SocialIdentityCount } from '../../social/entity/social-identity-count.entity';
-import { CollabIdentityCount } from '../../social/entity/collab-identity-count.entity';
-import { CollabFollowingDetail } from '../../social/entity/collab-following-detail.entity';
-import { SocialPost } from '../../social/entity/social-post.entity';
-import { SocialLike } from '../../social/entity/social-like.entity';
-import { SocialComment } from '../../social/entity/social-comment.entity';
-import { Promotion } from '../../social/entity/promotion.entity';
+import {Bid} from '../../bidding/entity/bid.entity';
+import {SocialIdentityCount} from '../../social/entity/social-identity-count.entity';
+import {CollabIdentityCount} from '../../social/entity/collab-identity-count.entity';
+import {CollabFollowingDetail} from '../../social/entity/collab-following-detail.entity';
+import {SocialPost} from '../../social/entity/social-post.entity';
+import {SocialLike} from '../../social/entity/social-like.entity';
+import {SocialComment} from '../../social/entity/social-comment.entity';
+import {Promotion} from '../../social/entity/promotion.entity';
+import {Registration} from "./registration.entity";
+import {BrandDetail} from "./brand-detail.entity";
+import {IdentityLocation} from "./identity-location.entity";
+import {UserCoverPhoto} from "./user-coverphoto.entity";
+import {UserStatus} from "../../common/enum";
+import {NotificationSetting} from "../../notification/entities/notification-setting.entity";
+import {ReferralDetails} from "../../referral/entities/referral.entity";
 
 export enum DealType {
   Barter = 'Barter',
@@ -30,13 +34,6 @@ export enum DealType {
 export enum BrandMode {
   Online = 'Online',
   Offline = 'Offline',
-}
-
-export enum UserStatus {
-  active = 'active',
-  hold = 'hold',
-  hide = 'hide',
-  disable = 'disable',
 }
 
 export enum UserType {
@@ -84,6 +81,9 @@ export class IdentityDetail {
 
   @Column({ length: 100, nullable: true })
   tag_name: string;
+
+  @Column({ length: 100, nullable: true })
+  referral_code: string;
 
   @Column({ length: 100, nullable: true })
   weblink: string;
@@ -168,4 +168,14 @@ export class IdentityDetail {
     (identitylocation) => identitylocation.identity_detail,
   )
   identitylocation: IdentityLocation[];
+
+  @OneToOne(() => NotificationSetting, (notificationSetting) => notificationSetting.identity, {
+    cascade: true,
+  })
+  notificationSetting: NotificationSetting;
+
+  @OneToOne(() => ReferralDetails, (referralDetails) => referralDetails.referral, {
+    cascade: true,
+  })
+  referral: ReferralDetails;
 }

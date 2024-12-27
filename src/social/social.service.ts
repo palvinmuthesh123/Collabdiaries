@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -24,6 +24,7 @@ import { CreateSocialLikeDto } from './dto/create-social-like.dto';
 import { UpdateSocialLikeDto } from './dto/update-social-like.dto';
 import { CreateSocialPostDto } from './dto/create-social-post.dto';
 import { UpdateSocialPostDto } from './dto/update-social-post.dto';
+import * as https from 'https';
 
 @Injectable()
 export class SocialService {
@@ -132,6 +133,89 @@ export class SocialService {
 
   async findAllCollabIdentityCount(): Promise<CollabIdentityCount[]> {
     return await this.collabIdentityCountRepository.find();
+  }
+
+  async fetchData(endpoint: string, type: 'youtube' | 'instagram'): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: type === 'youtube' ? process.env.YOUTUBE_API_HOST : process.env.INSTAGRAM_API_HOST,
+        path: endpoint,
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': type === 'youtube' ? process.env.YOUTUBE_API_HOST : process.env.INSTAGRAM_API_HOST,
+          'x-rapidapi-key': process.env.YOUTUBE_API_KEY,
+        },
+      };
+  
+      const req = https.request(options, (res) => {
+        let data = '';
+  
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+  
+        res.on('end', () => {
+          try {
+            const jsonData = JSON.parse(data);
+            resolve(jsonData);
+          } catch (error) {
+            reject(new Error('Error parsing JSON response'));
+          }
+        });
+      });
+  
+      req.on('error', (error) => {
+        reject(new Error(`Error making API request: ${error.message}`));
+      });
+  
+      req.end();
+    });
+  }
+
+  async saveSocialDetails(content: { type: 'youtube' | 'instagram' ; channelId: string; username: string; identityId: string; }): Promise<any> {
+    try {
+      const endpoint =
+        content.type === 'youtube'
+          ? `/channels?id=${content.channelId}&part=snippet%2CcontentDetails%2Cstatistics`
+          : `/api/instagram/users/info/${content.username}/username`;
+  
+      const response = content.type === 'youtube'
+        ? await this.fetchData(endpoint, 'youtube')
+        : await this.fetchData(endpoint, 'instagram');
+  
+      if (!response || (content.type === 'youtube' && !response.items)) {
+        throw new NotFoundException(`${content.type === 'youtube' ? 'Channel' : 'Account'} not found`);
+      }
+  
+      const newFollowerCount = content.type === 'youtube'
+        ? Number(response.items.statistics.subscriberCount || 0)
+        : Number(response.user.follower_count || 0);
+  
+      const newFollowingCount = content.type === 'instagram'
+        ? Number(response.user.following_count || 0)
+        : 0;
+  
+      const existingRecord = await this.socialIdentityCountRepository.findOne({
+        where: { identity_id: content.identityId },
+      });
+  
+      if (existingRecord) {
+        existingRecord.follower_count = Number(existingRecord.follower_count || 0) + newFollowerCount;
+        existingRecord.following_count = Number(existingRecord.following_count || 0) + newFollowingCount;
+        return await this.socialIdentityCountRepository.save(existingRecord);
+      } else {
+        const params = {
+          identity_id: content.identityId,
+          follower_count: newFollowerCount,
+          following_count: newFollowingCount,
+          engagement_rate: 0,
+        };
+        const socialIdentityCount = this.socialIdentityCountRepository.create(params);
+        return await this.socialIdentityCountRepository.save(socialIdentityCount);
+      }
+    } catch (error) {
+      throw new NotFoundException(`Error fetching ${content.type === 'youtube' ? 'channel' : 'Instagram'} details`);
+    }
   }
 
   async findOneCollabIdentityCount(id: string): Promise<CollabIdentityCount> {
@@ -285,6 +369,25 @@ export class SocialService {
       throw new NotFoundException(
         `SocialIdentityCount with ID ${id} not found`,
       );
+    }
+    return socialIdentityCount;
+  }
+
+  async findSocialByIdentityId(id: string): Promise<any> {
+    const socialIdentityCount =
+      await this.socialIdentityCountRepository.findOne({
+        where: { identity_id: id },
+      });
+    if (!socialIdentityCount) {
+      return {
+        influencer: false
+      }
+    }
+    if(socialIdentityCount.follower_count>1000) {
+      Object.assign(socialIdentityCount, {influencer: true})
+    }
+    else {
+      Object.assign(socialIdentityCount, {influencer: false})
     }
     return socialIdentityCount;
   }

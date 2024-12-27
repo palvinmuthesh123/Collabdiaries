@@ -1,12 +1,5 @@
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsBoolean,
-  IsEnum,
-  IsDateString,
-} from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {IsBoolean, IsDateString, IsEmail, IsEnum, IsOptional, IsString,} from 'class-validator';
+import {ApiProperty} from '@nestjs/swagger';
 
 export class CreateRegistrationsDto {
   @ApiProperty()
@@ -63,4 +56,9 @@ export class CreateRegistrationsDto {
   @IsOptional()
   @IsBoolean()
   is_dateOfBirth_public: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  referral_code?:string
 }

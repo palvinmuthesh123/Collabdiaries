@@ -1,15 +1,9 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
-import { BrandDetail } from './brand-detail.entity';
-import {IdentityDetail, UserStatus} from './identity-detail.entity';
-import { UserCoverPhoto } from './user-coverphoto.entity';
-import { IdentityLocation } from './identity-location.entity';
+import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn,} from 'typeorm';
+import {BrandDetail} from './brand-detail.entity';
+import {IdentityDetail} from './identity-detail.entity';
+import {UserCoverPhoto} from './user-coverphoto.entity';
+import {IdentityLocation} from './identity-location.entity';
+import {UserStatus} from "../../common/enum";
 
 @Entity('registration')
 export class Registration {
@@ -82,4 +76,5 @@ export class Registration {
     (identitylocation) => identitylocation.registration,
   )
   identitylocation: IdentityLocation[];
+
 }

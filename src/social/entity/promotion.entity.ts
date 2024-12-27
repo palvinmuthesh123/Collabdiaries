@@ -7,7 +7,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { IdentityDetail } from '../../users/entity/identity-detail.entity';
+import {IdentityDetail, UserType} from '../../users/entity/identity-detail.entity';
+import {LinkType} from "../../common/enum";
 
 @Entity('promotion')
 export class Promotion {
@@ -34,6 +35,13 @@ export class Promotion {
 
   @Column({ type: 'text' })
   type_id: string;
+
+  @Column({
+    type: 'enum',
+    enum: LinkType,
+    nullable: true, // Allows null values
+  })
+  link_type: LinkType;
 
   @Column({ type: 'numeric' })
   priority: number;

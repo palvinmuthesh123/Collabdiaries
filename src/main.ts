@@ -1,12 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { HttpExceptionFilter } from './config/http-exception.filter';
-import { ResponseInterceptor } from './config/response.interceptor';
+import {NestFactory} from '@nestjs/core';
+import {AppModule} from './app.module';
+import {ValidationPipe} from '@nestjs/common';
+import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
+import {HttpExceptionFilter} from './config/http-exception.filter';
+import {ResponseInterceptor} from './config/response.interceptor';
 import * as dotenv from 'dotenv';
-import logger from "@vendia/serverless-express/src/logger";
-import {ConfigService} from "@nestjs/config";
 
 async function bootstrap() {
   dotenv.config();

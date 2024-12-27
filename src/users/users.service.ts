@@ -12,11 +12,13 @@ import {UpdateUserCoverPhotoDto} from './dto/update-user-coverphoto.dto';
 import {CreateRegistrationsDto} from './dto/create-registration.dto';
 import {UpdateRegistrationsDto} from './dto/update-registration.dto';
 import {BrandDetail} from './entity/brand-detail.entity';
-import {IdentityDetail, UserStatus} from './entity/identity-detail.entity';
+import {IdentityDetail} from './entity/identity-detail.entity';
 import {IdentityLocation} from './entity/identity-location.entity';
 import {Registration} from './entity/registration.entity';
 import {UserCoverPhoto} from './entity/user-coverphoto.entity';
 import {UpdateStatusDto} from "../common/common-dto";
+import {UpdateBrandOwnershipDto} from "./dto/update-brand-ownership";
+import {UserStatus} from "../common/enum";
 
 @Injectable()
 export class UsersService {
@@ -354,7 +356,22 @@ export class UsersService {
     });
   }
 
-  async removeBrandDetail(id: string): Promise<void> {
+  async transferBrandOwnership(updateBrandOwner:UpdateBrandOwnershipDto): Promise<string> {
+    const brand = await this.identityDetailRepository.findOne({where:{identity_id:updateBrandOwner.brand_identity_id}});
+if (!brand) throw new NotFoundException('Brand is not found')
+    const newOwnerDetails = await this.identityDetailRepository.findOne({
+      where: { identity_id: updateBrandOwner.new_owner_identity_id },
+    });
+    if (!newOwnerDetails) throw new NotFoundException('New owner not found');
+    brand.registration_id = newOwnerDetails.registration_id;
+    brand.identity_id = newOwnerDetails.identity_id
+    await this.brandDetailRepository.save(brand);
+    return `Ownership of brand ID "${updateBrandOwner.brand_identity_id}" has been successfully transferred to "${updateBrandOwner.new_owner_identity_id}".`;
+  }
+
+
+
+async removeBrandDetail(id: string): Promise<void> {
     const brandDetail = await this.findOneBrandDetail(id);
     await this.brandDetailRepository.remove(brandDetail);
   }
