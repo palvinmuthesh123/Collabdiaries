@@ -5,6 +5,7 @@ import {
   IsArray,
   IsNumber,
 } from 'class-validator';
+import { BidStatus } from 'src/common/enum';
 
 export class CreateBidDto {
   @IsNotEmpty()
@@ -34,5 +35,5 @@ export class CreateBidDto {
 
   @IsNotEmpty()
   @IsString()
-  requestStatus: string;
+  requestStatus: BidStatus;
 }

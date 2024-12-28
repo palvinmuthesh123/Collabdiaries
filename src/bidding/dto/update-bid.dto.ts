@@ -5,6 +5,7 @@ import {
   IsArray,
   IsNumber,
 } from 'class-validator';
+import { BidStatus } from 'src/common/enum';
 
 export class UpdateBidDto {
   @IsOptional()
@@ -35,5 +36,5 @@ export class UpdateBidDto {
 
   @IsOptional()
   @IsString()
-  requestStatus?: string;
+  requestStatus?: BidStatus;
 }
