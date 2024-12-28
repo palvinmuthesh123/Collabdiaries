@@ -49,6 +49,15 @@ export class Registration {
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updated_date: Date;
 
+  @Column({ type: 'boolean', default: false })
+  is_blocked: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  block_reason: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  blocked_at: Date;
+
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.active })
   status: UserStatus;
 

@@ -33,6 +33,7 @@ import {JwtAuthGuard} from '../auth/jwt-auth.guard';
 import {ApiOperation, ApiTags} from '@nestjs/swagger';
 import {UpdateStatusDto} from "../common/common-dto";
 import {UpdateBrandOwnershipDto} from "./dto/update-brand-ownership";
+import {BlockRegisterDto} from "./dto/block-register.dto";
 
 @ApiTags('users')
 @Controller('users')
@@ -58,8 +59,10 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('registration')
   @ApiOperation({ summary: 'Fetching registration detail list' })
-  findAllRegistration(): Promise<Registration[]> {
-    return this.usersService.findAllRegistration();
+  findAllRegistration(
+    @Query('search') search: string,
+  ): Promise<Registration[]> {
+    return this.usersService.findAllRegistration(search);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -87,6 +90,22 @@ export class UsersController {
       @Body() updateRegistrationStatusDto: UpdateStatusDto,
   ): Promise<Registration> {
     return this.usersService.updateRegistrationStatus(id, updateRegistrationStatusDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'block_user' })
+  @Put('block-user')
+  async blockUser(@Body() payload:BlockRegisterDto):Promise<{message:string}> {
+    await this.usersService.blockUser(payload);
+    return { message: 'User has been blocked successfully' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'unblock_user' })
+  @Put('unblock-user')
+  async unblockUser(@Body() payload:BlockRegisterDto):Promise<{message:string}>  {
+    await this.usersService.unBlockUser(payload);
+    return { message: 'User has been unblocked successfully' };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -125,13 +144,14 @@ export class UsersController {
   async findAllNearbyInfluencer(
     @Query('latitude') latitude: string,
     @Query('longitude') longitude: string,
+    @Query('radius') radius: number,
   ): Promise<IdentityLocation[]> {
     const userLat = parseFloat(latitude);
     const userLon = parseFloat(longitude);
     if (isNaN(userLat) || isNaN(userLon)) {
       throw new BadRequestException('Invalid latitude or longitude');
     }
-    return this.usersService.findAllNearbyInfluencer(userLat, userLon);
+    return this.usersService.findAllNearbyInfluencer(userLat, userLon, radius);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -227,10 +247,15 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Post('brand-detail')
   @ApiOperation({ summary: 'creating brand related details' })
+  // async createBrandDetail(
+  //   @Body() createBrandDetailDto: CreateBrandDetailDto,
+  // ): Promise<BrandDetail> {
+  //   return this.usersService.createBrandDetail(createBrandDetailDto);
+  // }
   async createBrandDetail(
-    @Body() createBrandDetailDto: CreateBrandDetailDto,
-  ): Promise<BrandDetail> {
-    return this.usersService.createBrandDetail(createBrandDetailDto);
+    @Body() createIdentityDetailDto: CreateIdentityDetailDto,
+  ): Promise<IdentityDetail> {
+    return this.usersService.createIdentityDetail(createIdentityDetailDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -264,30 +289,42 @@ export class UsersController {
   async findAllNearbyBrandDetail(
     @Query('latitude') latitude: string,
     @Query('longitude') longitude: string,
-  ): Promise<BrandDetail[]> {
+    @Query('radius') radius: number,
+  ): Promise<IdentityDetail[]> {
     const userLat = parseFloat(latitude);
     const userLon = parseFloat(longitude);
     if (isNaN(userLat) || isNaN(userLon)) {
       throw new BadRequestException('Invalid latitude or longitude');
     }
-    return this.usersService.findAllNearbyBrandDetail(userLat, userLon);
+    return this.usersService.findAllNearbyBrandDetail(userLat, userLon, radius);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('brand-detail/:id')
   @ApiOperation({ summary: 'Fetching single brand details' })
-  async findOneBrandDetail(@Param('id') id: string): Promise<BrandDetail> {
-    return this.usersService.findOneBrandDetail(id);
+  // async findOneBrandDetail(@Param('id') id: string): Promise<BrandDetail> {
+  //   return this.usersService.findOneBrandDetail(id);
+  // }
+  async findOneBrandDetail(
+    @Param('id') id: string,
+  ): Promise<IdentityDetail> {
+    return this.usersService.findOneIdentityDetail(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('brand-detail/:id')
   @ApiOperation({ summary: 'Updating brand details' })
+  // async updateBrandDetail(
+  //   @Param('id') id: string,
+  //   @Body() updateBrandDetailDto: UpdateBrandDetailDto,
+  // ): Promise<BrandDetail> {
+  //   return this.usersService.updateBrandDetail(id, updateBrandDetailDto);
+  // }
   async updateBrandDetail(
     @Param('id') id: string,
-    @Body() updateBrandDetailDto: UpdateBrandDetailDto,
-  ): Promise<BrandDetail> {
-    return this.usersService.updateBrandDetail(id, updateBrandDetailDto);
+    @Body() updateIdentityDetailDto: UpdateIdentityDetailDto,
+  ): Promise<IdentityDetail> {
+    return this.usersService.updateIdentityDetail(id, updateIdentityDetailDto);
   }
 
   @UseGuards(JwtAuthGuard)

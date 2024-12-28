@@ -6,9 +6,11 @@ import {
   Param,
   Get,
   Delete,
+  Query,
+  Res,
 } from '@nestjs/common';
 import { SocialService } from './social.service';
-
+import { Response } from 'express';
 import { CreateCollabFollowingDetailDto } from './dto/create-collab-following.dto';
 import { UpdateCollabFollowingDetailDto } from './dto/update-collab-following.dto';
 import { CreateCollabIdentityCountDto } from './dto/create-collab-identitycount.dto';
@@ -272,4 +274,47 @@ export class SocialController {
   async removeSocialPost(@Param('id') id: string): Promise<void> {
     return this.socialService.removeSocialPost(id);
   }
+
+
+  // ........................................................................
+
+    @Get('oauth/url')
+    async getAuthUrl() {
+      return { url: await this.socialService.getAuthUrl() };
+    }
+  
+    @Get('oauth/callback')
+    async handleOAuthCallback(
+      @Query('code') code: string,
+      @Res() res: Response,
+    ): Promise<void> {
+      try {
+        const accessToken = await this.socialService.getAccessToken(code);
+        res.redirect(`/youtube/channel?accessToken=${accessToken}`);
+      } catch (error) {
+        res.status(400).send({ message: 'OAuth callback failed', error });
+      }
+    }
+
+    @Get('channel')
+    async getAuthenticatedChannelDetails(@Query('accessToken') accessToken: string): Promise<void> {
+      return await this.socialService.getAuthenticatedChannelDetails(accessToken);
+    }
+  
+    @Get('channel/videos')
+    async getChannelVideos(
+      @Query('channelId') channelId: string,
+      @Query('accessToken') accessToken: string,
+    ): Promise<void> {
+      return await this.socialService.getVideos(channelId, accessToken);
+    }
+  
+    @Get('video/details')
+    async getVideoDetails(
+      @Query('videoId') videoId: string,
+      @Query('accessToken') accessToken: string,
+    ): Promise<void> {
+      return await this.socialService.getVideoDetails(videoId, accessToken);
+    }
+
 }

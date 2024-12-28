@@ -7,9 +7,5 @@ export class CreateReferralDto {
 
     @IsString()
     @IsOptional()
-    brand_home_page_url?: string;
-
-    @IsString()
-    @IsOptional()
-    user_home_page_url?: string;
+    url?: string;
 }

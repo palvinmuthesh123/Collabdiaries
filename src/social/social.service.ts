@@ -25,9 +25,16 @@ import { UpdateSocialLikeDto } from './dto/update-social-like.dto';
 import { CreateSocialPostDto } from './dto/create-social-post.dto';
 import { UpdateSocialPostDto } from './dto/update-social-post.dto';
 import * as https from 'https';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class SocialService {
+  private readonly API_URL = process.env.YOUTUBE_API_URL;
+  private readonly CLIENT_ID = process.env.YOUTUBE_CLIENT_ID;
+  private readonly CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET;
+  private readonly REDIRECT_URI = process.env.YOUTUBE_REDIRECT_URI;
+  private oauth2Client: OAuth2Client;
+  
   constructor(
     @InjectRepository(CollabFollowingDetail)
     private readonly collabFollowingDetailRepository: Repository<CollabFollowingDetail>,
@@ -43,7 +50,13 @@ export class SocialService {
     private readonly socialLikeRepository: Repository<SocialLike>,
     @InjectRepository(SocialPost)
     private readonly socialPostRepository: Repository<SocialPost>,
-  ) {}
+  ) {
+    this.oauth2Client = new OAuth2Client(
+      this.CLIENT_ID,
+      this.CLIENT_SECRET,
+      this.REDIRECT_URI,
+    );
+  }
 
   //Collab Following Count
   async createCollabFollowing(
@@ -486,4 +499,62 @@ export class SocialService {
       throw new NotFoundException(`SocialPost with ID ${id} not found`);
     }
   }
+
+  // .........................................................................
+
+  async getAuthUrl(): Promise<string> {
+    const scopes = ['https://www.googleapis.com/auth/youtube.readonly'];
+    return this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+    });
+  }
+
+  async getAccessToken(code: string): Promise<string> {
+    const { tokens } = await this.oauth2Client.getToken(code);
+    this.oauth2Client.setCredentials(tokens);
+    return tokens.access_token;
+  }
+
+  private async fetchData1(url: string, accessToken: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const options = {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
+
+      https.get(url, options, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }).on('error', (error) => {
+        reject(error);
+      });
+    });
+  }
+
+  async getAuthenticatedChannelDetails(accessToken: string) {
+    const url = `${this.API_URL}/channels?part=snippet,contentDetails,statistics&mine=true`;
+    return await this.fetchData1(url, accessToken);
+  }
+
+  async getVideos(channelId: string, accessToken: string) {
+    const url = `${this.API_URL}/search?part=snippet&channelId=${channelId}&maxResults=10&order=date&type=video`;
+    return await this.fetchData1(url, accessToken);
+  }
+
+  async getVideoDetails(videoId: string, accessToken: string) {
+    const url = `${this.API_URL}/videos?part=snippet,statistics,contentDetails&id=${videoId}`;
+    return await this.fetchData1(url, accessToken);
+  }
+
 }

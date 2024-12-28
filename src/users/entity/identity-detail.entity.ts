@@ -24,6 +24,8 @@ import {UserCoverPhoto} from "./user-coverphoto.entity";
 import {UserStatus} from "../../common/enum";
 import {NotificationSetting} from "../../notification/entities/notification-setting.entity";
 import {ReferralDetails} from "../../referral/entities/referral.entity";
+import {IdentityBlock} from "../../setting/entities/user-block-setting.entity";
+import {ReportDetails} from "../../setting/entities/report-setting.entity";
 
 export enum DealType {
   Barter = 'Barter',
@@ -178,4 +180,17 @@ export class IdentityDetail {
     cascade: true,
   })
   referral: ReferralDetails;
+
+  @OneToMany(() => IdentityBlock, (block) => block.blocker)
+  blockedUsers: IdentityBlock[];
+
+  @OneToMany(() => IdentityBlock, (block) => block.blocked)
+  blockingUsers: IdentityBlock[];
+
+  @OneToMany(() => ReportDetails, (block) => block.reporter)
+  reportedAccounts: ReportDetails[];
+
+  @OneToMany(() => ReportDetails, (block) => block.reported)
+  reportingAccounts: ReportDetails[];
 }
+

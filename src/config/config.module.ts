@@ -23,6 +23,8 @@ import {SocialPost} from '../social/entity/social-post.entity';
 import {Notification} from "../notification/entities/notification.entity";
 import {NotificationSetting} from "../notification/entities/notification-setting.entity";
 import {ReferralDetails} from "../referral/entities/referral.entity";
+import {IdentityBlock} from "../setting/entities/user-block-setting.entity";
+import {ReportDetails} from "../setting/entities/report-setting.entity";
 
 @Module({
   imports: [
@@ -59,6 +61,8 @@ import {ReferralDetails} from "../referral/entities/referral.entity";
         Notification,
         NotificationSetting,
         ReferralDetails,
+        IdentityBlock,
+        ReportDetails,
       ],
       logging: true, // Enable logging to check synchronization queries
       ssl: {

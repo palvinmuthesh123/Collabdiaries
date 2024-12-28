@@ -6,52 +6,52 @@ import { BrandMode } from '../entity/identity-detail.entity';
 export class CreateBrandDetailDto {
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
-  identity_id?: string; // Optional field
+  @IsUUID('4', { message: 'The ID must be a valid UUIDv4' })
+  identity_id?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
-  registration_id?: string; // Optional field
+  @IsUUID('4', { message: 'The ID must be a valid UUIDv4' })
+  registration_id?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsArray()
-  category_id?: string[]; // Optional field
+  @IsArray({ message: 'Category ID must be an array of strings' })
+  category_id?: string[];
 
   @ApiProperty()
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'Barter must be a boolean value' })
   barter: boolean;
   
   @ApiProperty()
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'Paid must be a boolean value' })
   paid: boolean;
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
-  @IsEnum(BrandMode)
+  @IsString({ message: 'Brand mode must be a string' })
+  @IsEnum(BrandMode, { message: `Brand mode must be one of the following values: ${Object.values(BrandMode).join(', ')}` })
   brand_mode: BrandMode
   
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Online URL must be a string' })
   online_url: string
   
   @ApiProperty()
   @IsOptional()
-  @IsArray()
+  @IsArray({ message: 'Perks must be an array' })
   perks: any[]
   
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Latitude must be a string' })
   latitude: string
   
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Longitude must be a string' })
   longitude: string
 }

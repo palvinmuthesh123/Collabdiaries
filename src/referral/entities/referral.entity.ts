@@ -7,7 +7,7 @@ export class ReferralDetails extends BaseCommonEntity {
     @PrimaryGeneratedColumn('uuid')
     referral_id: string;
 
-    @Column({ type: 'uuid', nullable:false })
+    @Column({ type: 'uuid', nullable:false,unique:true })
     identity_id: string;
 
     @Column({ type: 'varchar', nullable: true, default:null })

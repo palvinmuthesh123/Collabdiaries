@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Negotiation } from './bid-negotiation.entity';
 import { IdentityDetail } from '../../users/entity/identity-detail.entity';
+import { BidStatus } from 'src/common/enum';
 
 @Entity('bid')
 export class Bid {
@@ -34,8 +35,8 @@ export class Bid {
   @Column({ type: 'varchar', array: true })
   perks: string[];
 
-  @Column({ type: 'text' })
-  requestStatus: string;
+  @Column({ type: 'enum', enum: BidStatus, default: BidStatus.received })
+  requestStatus: BidStatus;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_date: Date;

@@ -39,7 +39,7 @@ export class ReferralService {
     const identity = await this.identityRepository.findOne({where:{identity_id:createReferralDto.identity_id}})
     if (!identity) throw new NotFoundException('This identity does not exist')
     if (identity.user_type === UserType.CollabUser){
-      const userHomePageUrl = createReferralDto.user_home_page_url || '';
+      const userHomePageUrl = createReferralDto.url || '';
       const qrCodeLink = await this.generateQrCode(userHomePageUrl)
       const uniqueReferralCode = await this.generateReferralCode();
       const referral = this.referralRepository.create({
@@ -49,7 +49,7 @@ export class ReferralService {
       });
       return  this.referralRepository.save(referral);
     }
-    const brandHomePageUrl = createReferralDto.brand_home_page_url || ''
+    const brandHomePageUrl = createReferralDto.url || ''
     const qrCodeLink = await this.generateQrCode(brandHomePageUrl)
     const referral = this.referralRepository.create({
       ...createReferralDto,
@@ -69,6 +69,13 @@ export class ReferralService {
     return  referral
   }
 
+  async updateQrCode(data:{identity_id:string,url:string}){
+    const referralDetails = await this.referralRepository.findOne({where:{identity_id:data.identity_id}});
+    if (!referralDetails)throw new NotFoundException('Referral not found')
+    referralDetails.qr_code_link =  await this.generateQrCode(data.url)
+    await this.referralRepository.save(referralDetails)
+  }
+// This work do with the cron_job
   async update():Promise<void> {
     const referrals = await this.referralRepository.find({where:{ referral_code: Not(null),}});
     for (const referral of referrals) {

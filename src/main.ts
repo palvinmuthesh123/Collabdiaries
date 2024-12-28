@@ -1,6 +1,6 @@
 import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
-import {ValidationPipe} from '@nestjs/common';
+import {BadRequestException, ValidationPipe} from '@nestjs/common';
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {HttpExceptionFilter} from './config/http-exception.filter';
 import {ResponseInterceptor} from './config/response.interceptor';
@@ -14,6 +14,18 @@ async function bootstrap() {
       whitelist: true, // Strip properties that are not in the DTO
       forbidNonWhitelisted: true, // Throw an error if non-whitelisted properties are present
       transform: true, // Automatically transform payloads to DTO instances
+      exceptionFactory: (errors) => {
+        const formattedErrors = errors.map((err) => ({
+          field: err.property,
+          errors: Object.values(err.constraints || {}),
+        }));
+        return new BadRequestException({
+          success: 0,
+          statusCode: 400,
+          message: 'Validation Failed',
+          errors: formattedErrors,
+        });
+      },
     }),
   );
 

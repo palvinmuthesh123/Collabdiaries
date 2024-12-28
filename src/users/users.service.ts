@@ -19,6 +19,7 @@ import {UserCoverPhoto} from './entity/user-coverphoto.entity';
 import {UpdateStatusDto} from "../common/common-dto";
 import {UpdateBrandOwnershipDto} from "./dto/update-brand-ownership";
 import {UserStatus} from "../common/enum";
+import {BlockRegisterDto} from "./dto/block-register.dto";
 
 @Injectable()
 export class UsersService {
@@ -33,7 +34,7 @@ export class UsersService {
     private readonly registrationRepository: Repository<Registration>,
     @InjectRepository(UserCoverPhoto)
     private userCoverPhotoRepository: Repository<UserCoverPhoto>,
-  ) {}
+  ) { }
 
   async createRegistration(
     createRegistrationDto: CreateRegistrationsDto,
@@ -44,26 +45,37 @@ export class UsersService {
     return this.registrationRepository.save(registration);
   }
 
-  async commonFindOneRegistrationWithSafetyConditions(id:string): Promise<Registration>{
+  async commonFindOneRegistrationWithSafetyConditions(id: string): Promise<Registration> {
     const registerUser = await this.registrationRepository.findOne({
-      where: { registration_id: id,is_deleted:false }
+      where: { registration_id: id, is_deleted: false }
     })
     if (!registerUser) {
       throw new NotFoundException(`Registration with ID ${id} not found`);
     }
-    if (registerUser.status === UserStatus.disable){ throw new NotFoundException(`Registration with ID ${id} status is disable`);}
+    if (registerUser.status === UserStatus.disable) { throw new NotFoundException(`Registration with ID ${id} status is disable`); }
     return registerUser;
   }
 
-  async findAllRegistration(): Promise<Registration[]> {
-    return this.registrationRepository.find({
-      where: {is_deleted:false,status:In([UserStatus.active,UserStatus.hold,UserStatus.disable])},relations: ['identityDetails'],
-    });
+  async findAllRegistration(search: string): Promise<Registration[]> {
+    const queryBuilder = this.registrationRepository.createQueryBuilder('registration');
+    queryBuilder
+      .where('registration.is_deleted = :isDeleted', { isDeleted: false })
+      .andWhere('registration.status IN (:...statuses)', {
+        statuses: [UserStatus.active, UserStatus.hold, UserStatus.disable],
+      });
+    if (search) {
+      queryBuilder.andWhere(
+        '(LOWER(registration.name) LIKE :search OR LOWER(registration.user_name) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+    queryBuilder.leftJoinAndSelect('registration.identityDetails', 'identityDetails');
+    return await queryBuilder.getMany();
   }
 
   async findOneRegistration(id: string): Promise<Registration> {
     const registerUser = await this.registrationRepository.findOne({
-      where: { registration_id: id,is_deleted:false },relations:['identityDetails']
+      where: { registration_id: id, is_deleted: false }, relations: ['identityDetails']
     });
     if (registerUser) return registerUser
     throw new NotFoundException(`Registration with ID ${id} not found`);
@@ -74,15 +86,15 @@ export class UsersService {
     updateRegistrationDto: UpdateRegistrationsDto,
   ): Promise<Registration> {
     const user = await this.commonFindOneRegistrationWithSafetyConditions(id)
-    if(user) {
+    if (user) {
       await this.registrationRepository.update(id, updateRegistrationDto);
       return this.findOneRegistration(id);
     }
   }
 
   async updateRegistrationStatus(
-      id: string,
-      updateRegistrationStatusDto: UpdateStatusDto,
+    id: string,
+    updateRegistrationStatusDto: UpdateStatusDto,
   ): Promise<Registration> {
     const registerUser = await this.registrationRepository.findOne({
       where: { registration_id: id },
@@ -98,9 +110,28 @@ export class UsersService {
     await this.registrationRepository.delete(id);
   }
 
+  async blockUser(blockRegister:BlockRegisterDto): Promise<void> {
+    const user = await this.registrationRepository.findOne({ where: { registration_id:blockRegister.register_id } });
+    if (!user) throw new Error('User not found');
+    user.is_blocked = true;
+    user.block_reason = blockRegister.reason || null;
+    user.blocked_at = new Date();
+    await this.registrationRepository.save(user);
+  }
+
+
+  async unBlockUser(unblockRegister:BlockRegisterDto): Promise<void> {
+    const user = await this.registrationRepository.findOne({ where: { registration_id:unblockRegister.register_id } });
+    if (!user) throw new Error('User not found');
+    user.is_blocked = false;
+    user.block_reason = unblockRegister.reason || null;
+    user.blocked_at = new Date();
+    await this.registrationRepository.save(user);
+  }
+
   async softDeleteRegistration(id: string): Promise<boolean> {
     const softDelete = await this.registrationRepository.update(id, { is_deleted: true });
-    if (softDelete){
+    if (softDelete) {
       await this.softDeleteAllIdentityDetailsWithRegistration(id)
       return true
     } throw new NotFoundException(`Registration with ID ${id} not found`);
@@ -122,33 +153,39 @@ export class UsersService {
   async findAllNearbyInfluencer(
     userLat: number,
     userLon: number,
-    radius: number = 20,
+    // radius: number = 20,
+    radius: number,
   ): Promise<IdentityLocation[]> {
     const query = this.identityLocationRepository
-    .createQueryBuilder('identityLocation')
-    .addSelect(
-      `6371 * acos(
-        cos(radians(:userLat)) *
-        cos(radians(CAST(identityLocation.latitude AS double precision))) *
-        cos(radians(CAST(identityLocation.longitude AS double precision)) - radians(:userLon)) +
-        sin(radians(:userLat)) *
-        sin(radians(CAST(identityLocation.latitude AS double precision)))
-      )`,
-      'distance',
-    )
-    .where(
-      `6371 * acos(
-        cos(radians(:userLat)) *
-        cos(radians(CAST(identityLocation.latitude AS double precision))) *
-        cos(radians(CAST(identityLocation.longitude AS double precision)) - radians(:userLon)) +
-        sin(radians(:userLat)) *
-        sin(radians(CAST(identityLocation.latitude AS double precision)))
-      ) <= :radius`,
-    )
-    .setParameters({ userLat, userLon, radius })
-    .leftJoinAndSelect('identityLocation.identity_detail', 'identityDetail') // Include IdentityDetail relation
-    .leftJoinAndSelect('identityLocation.registration', 'registration') // Include Registration relation
-    .orderBy('distance', 'ASC');
+      .createQueryBuilder('identityLocation')
+      .addSelect(
+        `6371 * acos(
+          cos(radians(:userLat)) *
+          cos(radians(CAST(identityLocation.latitude AS double precision))) *
+          cos(radians(CAST(identityLocation.longitude AS double precision)) - radians(:userLon)) +
+          sin(radians(:userLat)) *
+          sin(radians(CAST(identityLocation.latitude AS double precision)))
+        )`,
+        'distance',
+      )
+      .innerJoinAndSelect('identityLocation.identity_detail', 'identityDetail')
+      .innerJoin(
+        'identityDetail.socialIdentityCount',
+        'socialIdentityCount',
+        'socialIdentityCount.follower_count > :minFollowerCount',
+        { minFollowerCount: 1000 },
+      )
+      .where(
+        `6371 * acos(
+          cos(radians(:userLat)) *
+          cos(radians(CAST(identityLocation.latitude AS double precision))) *
+          cos(radians(CAST(identityLocation.longitude AS double precision)) - radians(:userLon)) +
+          sin(radians(:userLat)) *
+          sin(radians(CAST(identityLocation.latitude AS double precision)))
+        ) <= :radius`,
+      )
+      .setParameters({ userLat, userLon, radius })
+      .orderBy('distance', 'ASC');
     return await query.getMany();
   }
 
@@ -185,20 +222,20 @@ export class UsersService {
     return this.identityDetailRepository.save(identityDetail);
   }
 
-  async commonFindOneIdentityDetailWithSafetyConditions(id:string): Promise<IdentityDetail>{
+  async commonFindOneIdentityDetailWithSafetyConditions(id: string): Promise<IdentityDetail> {
     const identityDetail = await this.identityDetailRepository.findOne({
-      where: { identity_id: id,is_deleted:false }
+      where: { identity_id: id, is_deleted: false }
     })
     if (!identityDetail) {
       throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
     }
-    if (identityDetail.status === UserStatus.disable){ throw new NotFoundException(`IdentityDetail with ID ${id} status is disable`);}
+    if (identityDetail.status === UserStatus.disable) { throw new NotFoundException(`IdentityDetail with ID ${id} status is disable`); }
     return identityDetail;
   }
 
   async findOneIdentityDetail(id: string): Promise<IdentityDetail> {
     const identityDetail = await this.identityDetailRepository.findOne({
-      where: { identity_id: id,is_deleted:false },relations: ['identitylocation'],
+      where: { identity_id: id, is_deleted: false }, relations: ['identitylocation'],
     });
     if (!identityDetail) {
       throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
@@ -216,8 +253,8 @@ export class UsersService {
   }
 
   async updateIdentityDetailStatus(
-      id: string,
-      updateIdentityDetailsStatusDto: UpdateStatusDto,
+    id: string,
+    updateIdentityDetailsStatusDto: UpdateStatusDto,
   ): Promise<IdentityDetail> {
     const identityDetail = await this.identityDetailRepository.findOne({
       where: { identity_id: id },
@@ -226,7 +263,7 @@ export class UsersService {
       throw new NotFoundException(`Identity detail with ID ${id} not found`);
     }
     Object.assign(identityDetail, updateIdentityDetailsStatusDto);
-     return this.identityDetailRepository.save(identityDetail);
+    return this.identityDetailRepository.save(identityDetail);
   }
 
   async removeIdentityDetail(id: string): Promise<void> {
@@ -237,11 +274,11 @@ export class UsersService {
   }
 
   async softDeleteAllIdentityDetailsWithRegistration(
-      registrationId: string,
+    registrationId: string,
   ): Promise<void> {
     await this.identityDetailRepository.update(
-        { registration_id: registrationId }, // Update where registration_id is in the list
-        { is_deleted: true },
+      { registration_id: registrationId }, // Update where registration_id is in the list
+      { is_deleted: true },
     );
   }
 
@@ -249,36 +286,35 @@ export class UsersService {
 
   async softDeleteIdentityDetail(id: string): Promise<boolean> {
     const softDelete = await this.identityDetailRepository.update(id, { is_deleted: true });
-   if (!softDelete) throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
+    if (!softDelete) throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
     return true
   }
 
 
   async findAllIdentityDetail(id: string): Promise<IdentityDetail[]> {
     return this.identityDetailRepository.find({
-      where: { registration_id: id,is_deleted:false,status:In([UserStatus.active,UserStatus.hold,UserStatus.disable]) }
+      where: { registration_id: id, is_deleted: false, status: In([UserStatus.active, UserStatus.hold, UserStatus.disable]) }
     });
   }
 
   async createBrandDetail(
     createBrandDetailDto: CreateBrandDetailDto,
   ): Promise<BrandDetail> {
-    const newBrandDetail =
-      this.brandDetailRepository.create(createBrandDetailDto);
+    const newBrandDetail = this.brandDetailRepository.create(createBrandDetailDto);
     return this.brandDetailRepository.save(newBrandDetail);
   }
 
   async findAllBrandsDetail(id: string): Promise<BrandDetail[]> {
     let whereParams = {}
-    switch(id) {
+    switch (id) {
       case 'paid':
-        Object.assign(whereParams, {paid: true});
+        Object.assign(whereParams, { paid: true });
         break;
       case 'unpaid':
-        Object.assign(whereParams, {paid: false});
+        Object.assign(whereParams, { paid: false });
         break;
       case 'barter':
-        Object.assign(whereParams, {barter: true});
+        Object.assign(whereParams, { barter: true });
         break;
       default:
         break;
@@ -293,34 +329,35 @@ export class UsersService {
   async findAllNearbyBrandDetail(
     userLat: number,
     userLon: number,
-    radius: number = 20,
-  ): Promise<BrandDetail[]> {
-    const query = this.brandDetailRepository
-      .createQueryBuilder('brandDetail')
-      .addSelect(
-        `6371 * acos(
-            cos(radians(:userLat)) *
-            cos(radians(CAST(brandDetail.latitude AS double precision))) *
-            cos(radians(CAST(brandDetail.longitude AS double precision)) - radians(:userLon)) +
-            sin(radians(:userLat)) *
-            sin(radians(CAST(brandDetail.latitude AS double precision)))
-        )`,
-        'distance',
-      )
-      .where(
-        `6371 * acos(
-            cos(radians(:userLat)) *
-            cos(radians(CAST(brandDetail.latitude AS double precision))) *
-            cos(radians(CAST(brandDetail.longitude AS double precision)) - radians(:userLon)) +
-            sin(radians(:userLat)) *
-            sin(radians(CAST(brandDetail.latitude AS double precision)))
-        ) <= :radius`,
-      )
-      .setParameters({ userLat, userLon, radius })
-      .leftJoinAndSelect('brandDetail.identityDetail', 'identityDetail') // Load identityDetail relation
-      .leftJoinAndSelect('brandDetail.registration', 'registration') // Load registration relation
-      .orderBy('distance', 'ASC');
-  
+    // radius: number = 20,
+    radius: number,
+  ): Promise<IdentityDetail[]> {
+    const query = this.identityDetailRepository
+    .createQueryBuilder('identityDetail')
+    .addSelect(
+      `6371 * acos(
+          cos(radians(:userLat)) *
+          cos(radians(CAST(identitylocation.latitude AS double precision))) *
+          cos(radians(CAST(identitylocation.longitude AS double precision)) - radians(:userLon)) +
+          sin(radians(:userLat)) *
+          sin(radians(CAST(identitylocation.latitude AS double precision)))
+      )`,
+      'distance',
+    )
+    .leftJoinAndSelect('identityDetail.identitylocation', 'identitylocation') // Join with IdentityLocation for latitude/longitude
+    .leftJoinAndSelect('identityDetail.registration', 'registration') // Load registration relation
+    .where(
+      `6371 * acos(
+          cos(radians(:userLat)) *
+          cos(radians(CAST(identitylocation.latitude AS double precision))) *
+          cos(radians(CAST(identitylocation.longitude AS double precision)) - radians(:userLon)) +
+          sin(radians(:userLat)) *
+          sin(radians(CAST(identitylocation.latitude AS double precision)))
+      ) <= :radius`,
+    )
+    .setParameters({ userLat, userLon, radius })
+    .orderBy('distance', 'ASC');
+
     return await query.getMany();
   }
 
@@ -356,9 +393,9 @@ export class UsersService {
     });
   }
 
-  async transferBrandOwnership(updateBrandOwner:UpdateBrandOwnershipDto): Promise<string> {
-    const brand = await this.identityDetailRepository.findOne({where:{identity_id:updateBrandOwner.brand_identity_id}});
-if (!brand) throw new NotFoundException('Brand is not found')
+  async transferBrandOwnership(updateBrandOwner: UpdateBrandOwnershipDto): Promise<string> {
+    const brand = await this.identityDetailRepository.findOne({ where: { identity_id: updateBrandOwner.brand_identity_id } });
+    if (!brand) throw new NotFoundException('Brand is not found')
     const newOwnerDetails = await this.identityDetailRepository.findOne({
       where: { identity_id: updateBrandOwner.new_owner_identity_id },
     });
@@ -371,7 +408,7 @@ if (!brand) throw new NotFoundException('Brand is not found')
 
 
 
-async removeBrandDetail(id: string): Promise<void> {
+  async removeBrandDetail(id: string): Promise<void> {
     const brandDetail = await this.findOneBrandDetail(id);
     await this.brandDetailRepository.remove(brandDetail);
   }

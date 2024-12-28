@@ -30,3 +30,22 @@ export enum UserStatus {
   disable='disable',
   active='active',
 }
+
+export enum BidStatus {
+  received= "received",
+  completed= "completed",
+  accepted= "accepted",
+  rejected= "rejected",
+  terminated= "terminated"
+}
+
+export enum ReportType {
+  account = 'account',
+  post = 'post',
+}
+
+export enum ReportStatus {
+  Pending = 'Pending',
+  Reviewed = 'Reviewed',
+  Resolved = 'Resolved',
+}
