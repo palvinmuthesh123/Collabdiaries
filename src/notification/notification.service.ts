@@ -62,7 +62,7 @@ export class NotificationService {
     return await this.notificationRepository.count({
       where: {
         identity_id: userId,
-        created_at: Between(todayStart, todayEnd),
+        created_date: Between(todayStart, todayEnd),
         method: NotificationMethod.push, // Count only push notifications
       },
     });
@@ -71,7 +71,7 @@ export class NotificationService {
   async findAll(identity_id: string): Promise<Notification[]> {
     return this.notificationRepository.find({
       where: { identity_id },
-      order: { created_at: 'DESC' },
+      order: { created_date: 'DESC' },
     });
   }
 

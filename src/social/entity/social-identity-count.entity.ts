@@ -26,6 +26,18 @@ export class SocialIdentityCount {
   @Column({ type: 'numeric', nullable: true })
   engagement_rate: number;
 
+  @Column({ type: 'text', nullable: true })
+  user_id: string;
+
+  @Column({ type: 'text', nullable: true })
+  access_token: string;
+
+  @Column({ type: 'text', nullable: true })
+  type: string;
+
+  @Column({ type: 'text', nullable: true })
+  name: string;
+
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_date: Date;
 

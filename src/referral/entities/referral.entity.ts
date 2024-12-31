@@ -1,6 +1,5 @@
-import {Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 import {BaseCommonEntity} from "../../common/base.entity";
-import {IdentityDetail} from "../../users/entity/identity-detail.entity";
 
 @Entity('referrals')
 export class ReferralDetails extends BaseCommonEntity {
@@ -23,7 +22,7 @@ export class ReferralDetails extends BaseCommonEntity {
     total_brand: number;
 
     // Relationships
-    @OneToOne(() => IdentityDetail, (identityDetail) => identityDetail.referral)
-    @JoinColumn({ name: 'identity_id' })
-    referral: IdentityDetail;
+    // @OneToOne(() => IdentityDetail, (identityDetail) => identityDetail.referral)
+    // @JoinColumn({ name: 'identity_id' })
+    // referral: IdentityDetail;
 }

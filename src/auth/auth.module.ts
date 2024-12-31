@@ -18,7 +18,8 @@ import {ReferralDetails} from "../referral/entities/referral.entity";
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '24h' },
+        // TODO => TOKEN EXPIRE TIME SET AGAIN
+        signOptions: { expiresIn: '30d' },
       }),
       inject: [ConfigService],
     }),

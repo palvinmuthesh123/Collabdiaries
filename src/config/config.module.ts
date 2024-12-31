@@ -2,10 +2,9 @@ import {Module} from '@nestjs/common';
 import {ConfigModule} from '@nestjs/config';
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {Registration} from '../users/entity/registration.entity';
-import {BrandDetail} from '../users/entity/brand-detail.entity';
 import {Category} from '../category/category.entity';
 import {IdentityDetail} from '../users/entity/identity-detail.entity';
-import {IdentityLocation} from '../users/entity/identity-location.entity';
+import {IdentityLocation} from '../users/entity/location.entity';
 import {UserCoverPhoto} from '../users/entity/user-coverphoto.entity';
 import {Country} from '../country/country.entity';
 import {State} from '../state/state.entity';
@@ -40,7 +39,6 @@ import {ReportDetails} from "../setting/entities/report-setting.entity";
       database: process.env.DATABASE_NAME,
       entities: [
         Registration,
-        BrandDetail,
         Category,
         IdentityDetail,
         IdentityLocation,

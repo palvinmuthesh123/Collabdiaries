@@ -1,14 +1,14 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import {IdentityDetail, UserType} from '../../users/entity/identity-detail.entity';
 import {LinkType} from "../../common/enum";
+import {IdentityDetail} from "../../users/entity/identity-detail.entity";
 
 @Entity('promotion')
 export class Promotion {

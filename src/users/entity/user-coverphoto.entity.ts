@@ -1,14 +1,14 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { Registration } from '../entity/registration.entity';
-import { IdentityDetail } from '../entity/identity-detail.entity';
+import {Registration} from "./registration.entity";
+import {IdentityDetail} from "./identity-detail.entity";
 
 @Entity('userCoverPhoto')
 export class UserCoverPhoto {
@@ -37,13 +37,13 @@ export class UserCoverPhoto {
   updated_date: Date;
 
   // Relationships
-  @ManyToOne(() => Registration, (registration) => registration.userCoverPhoto)
+  @ManyToOne(() => Registration, (registration) => registration.userCoverPhotos)
   @JoinColumn({ name: 'registration_id' }) // Specify the foreign key column
   registration: Registration;
 
   @ManyToOne(
     () => IdentityDetail,
-    (identityDetail) => identityDetail.userCoverPhoto,
+    (identityDetail) => identityDetail.identityCoverPhotos,
   )
   @JoinColumn({ name: 'user_identity_id' }) // Specify the foreign key column
   identityDetail: IdentityDetail;

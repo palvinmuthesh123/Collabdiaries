@@ -6,7 +6,7 @@ import {IdentityDetail} from '../users/entity/identity-detail.entity';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Repository} from 'typeorm';
 import {NotificationSetting} from "../notification/entities/notification-setting.entity";
-import {ReferralDetails} from "../referral/entities/referral.entity";
+import {DealType} from "../common/enum";
 
 @Injectable()
 export class AuthService {
@@ -17,8 +17,6 @@ export class AuthService {
     private readonly identityDetailRepository: Repository<IdentityDetail>,
     @InjectRepository(NotificationSetting)
     private readonly notificationSettingRepository: Repository<NotificationSetting>,
-    @InjectRepository(ReferralDetails)
-    private readonly referralDetailsRepository: Repository<ReferralDetails>,
     private readonly jwtService: JwtService,
     private readonly firebaseService: FirebaseService,
   ) {}
@@ -31,41 +29,34 @@ export class AuthService {
       const randomIndex = Math.floor(Math.random() * characters.length);
       referralString += characters[randomIndex];
     }
-    const referralCode = await this.referralDetailsRepository.findOne({where:{referral_code:referralString}})
+    const referralCode = await this.registrationRepository.findOne({where:{referral_code:referralString}})
     if (!referralCode) return referralString;
     await this.generateReferralCode()
   }
 
   async login_firebase(idToken: string, mobile_no: string,referral_code?:string) {
+    if (!mobile_no || mobile_no.length < 10) {
+      throw new UnauthorizedException('Invalid Mobile Number');
+    }
     const decodedToken = await this.firebaseService.verifyIdToken(idToken);
     const userId = decodedToken.uid;
-
     if (userId) {
-      // Check if the user exists in your database
       let user = await this.registrationRepository.findOneBy({
         mobile_no: mobile_no,
       });
-
       if (!user) {
-        // Create user logic here
         const registration = this.registrationRepository.create({
           mobile_no: mobile_no,
+          referral_code:await this.generateReferralCode()
         });
         user = await this.registrationRepository.save(registration);
-
+   // Create identity
         const createIdentityDetail = this.identityDetailRepository.create({
           registration_id: user.registration_id,
-          referral_code:referral_code || null
+          referral_by_code:referral_code || null,
+          deal_type:[DealType.Barter, DealType.Paid, DealType.Unpaid]
         });
         await this.identityDetailRepository.save(createIdentityDetail);
-
-        // Create referral code each and every identity
-        const referralDetail = this.referralDetailsRepository.create({
-          identity_id: createIdentityDetail.identity_id,
-          referral_code: await this.generateReferralCode()
-        });
-        await this.referralDetailsRepository.save(referralDetail);
-
         // Create notification setting of every identity
         const createIdentityNotificationSetting =  this.notificationSettingRepository.create({
           identity_id:createIdentityDetail.identity_id
@@ -88,43 +79,32 @@ export class AuthService {
     if (!mobile_no || mobile_no.length < 10) {
       throw new UnauthorizedException('Invalid Mobile Number');
     }
-
     let user = await this.registrationRepository.findOneBy({
       mobile_no: mobile_no,
     });
-
     if (!user) {
-      // Create user logic here
       const registration = this.registrationRepository.create({
         mobile_no: mobile_no,
+        referral_code:await this.generateReferralCode()
       });
       user = await this.registrationRepository.save(registration);
 
       const createIdentityDetail = this.identityDetailRepository.create({
         registration_id: user.registration_id,
-        referral_code:referral_code,
+        referral_by_code:referral_code,
+        deal_type:[DealType.Barter, DealType.Paid, DealType.Unpaid]
       });
       await this.identityDetailRepository.save(createIdentityDetail);
-
-      // Create referral code each and every identity
-      const referralDetail = this.referralDetailsRepository.create({
-        identity_id: createIdentityDetail.identity_id,
-
-      });
-      await this.referralDetailsRepository.save(referralDetail);
-
       // Create notification setting of every identity
       const createIdentityNotificationSetting =  this.notificationSettingRepository.create({
         identity_id:createIdentityDetail.identity_id
       })
       await this.notificationSettingRepository.save(createIdentityNotificationSetting);
     }
-
     const jwtToken = this.jwtService.sign({
       registration_id: user.registration_id,
       mobile_no: user.mobile_no,
     });
     return { ...user, accessToken: jwtToken };
   }
-
 }

@@ -1,12 +1,13 @@
 import {InjectRepository} from "@nestjs/typeorm";
 import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
 import {Repository} from "typeorm";
-import {IdentityDetail, UserType} from "../users/entity/identity-detail.entity";
 import {IdentityBlock} from "./entities/user-block-setting.entity";
 import {CreateBlockIdentityDto} from "./dto/create-block-identity.dto";
 import {CreateReportDetailsDto} from "./dto/create-report.dto";
 import {ReportDetails} from "./entities/report-setting.entity";
 import {UpdateReportDetailsDto} from "./dto/update-report.dto";
+import {IdentityDetail} from "../users/entity/identity-detail.entity";
+import {UserType} from "../common/enum";
 
 @Injectable()
 export class SettingService {

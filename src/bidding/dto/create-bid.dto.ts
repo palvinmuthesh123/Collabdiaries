@@ -4,8 +4,10 @@ import {
   IsUUID,
   IsArray,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { BidStatus } from 'src/common/enum';
+import { DealType } from '../entity/bid.entity';
 
 export class CreateBidDto {
   @IsNotEmpty()
@@ -16,10 +18,15 @@ export class CreateBidDto {
   @IsUUID()
   bidToUserId: string;
 
+  // @IsNotEmpty()
+  // @IsArray()
+  // @IsString({ each: true })
+  // dealType: string[];
+
   @IsNotEmpty()
   @IsArray()
-  @IsString({ each: true })
-  dealType: string[];
+  @IsEnum(DealType)
+  dealType?: DealType;
 
   @IsNotEmpty()
   @IsNumber()

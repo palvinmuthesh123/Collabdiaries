@@ -12,6 +12,12 @@ import { Negotiation } from './bid-negotiation.entity';
 import { IdentityDetail } from '../../users/entity/identity-detail.entity';
 import { BidStatus } from 'src/common/enum';
 
+export enum DealType {
+  Barter = 'Barter',
+  Paid = 'Paid',
+  Unpaid = 'Unpaid',
+}
+
 @Entity('bid')
 export class Bid {
   @PrimaryGeneratedColumn('uuid')
@@ -23,8 +29,11 @@ export class Bid {
   @Column({ type: 'uuid' })
   bidToUserId: string;
 
-  @Column({ type: 'varchar', array: true })
-  dealType: string[];
+  // @Column({ type: 'varchar', array: true })
+  // dealType: string[];
+
+  @Column({ type: 'enum', enum: DealType, nullable: true, array: true })
+  dealType: DealType;
 
   @Column({ type: 'numeric' })
   amount: number;

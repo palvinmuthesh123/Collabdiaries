@@ -1,11 +1,14 @@
-import {CreateDateColumn, Entity, UpdateDateColumn} from 'typeorm';
+import {Column, CreateDateColumn, Entity, UpdateDateColumn} from 'typeorm';
 
 @Entity('notification_settings')
 export class BaseCommonEntity {
 
     @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    created_at: Date;
+    created_date: Date;
 
     @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    updated_at: Date;
+    updated_date: Date;
+
+    @Column({ type: 'boolean', default: false })
+    is_deleted: boolean;
 }

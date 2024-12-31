@@ -12,11 +12,12 @@ import {
 import { BidService } from './bidding.service';
 import { CreateBidDto } from './dto/create-bid.dto';
 import { UpdateBidDto } from './dto/update-bid.dto';
-import { Bid } from './entity/bid.entity';
+import { Bid, DealType } from './entity/bid.entity';
 import { CreateNegotiationDto } from './dto/create-negotiation.dto';
 import { UpdateNegotiationDto } from './dto/update-negotiation.dto';
 import { Negotiation } from './entity/bid-negotiation.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { BidStatus } from 'src/common/enum';
 
 @Controller('bids')
 export class BidController {
@@ -33,6 +34,15 @@ export class BidController {
   @Get('/')
   async findAllBid(): Promise<Bid[]> {
     return this.bidService.findAllBid();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/filter')
+  async findAllBidByFilter(
+    @Body('statuses') statuses?: BidStatus[],
+    @Body('dealTypes') dealTypes?: DealType[],
+  ): Promise<Bid[]> {
+    return this.bidService.findAllBidByFilter(statuses, dealTypes);
   }
 
   @UseGuards(JwtAuthGuard)

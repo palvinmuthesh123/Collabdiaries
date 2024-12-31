@@ -1,13 +1,6 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
-import { State } from '../state/state.entity';
-import { IdentityLocation } from '../users/entity/identity-location.entity';
+import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn,} from 'typeorm';
+import {State} from '../state/state.entity';
+import {IdentityLocation} from '../users/entity/location.entity';
 
 @Entity('country')
 export class Country {

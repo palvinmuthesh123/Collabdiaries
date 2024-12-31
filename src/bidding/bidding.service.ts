@@ -2,12 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { JobQueueService } from './job-queue.service';
-import { Bid } from './entity/bid.entity';
+import { Bid, DealType } from './entity/bid.entity';
 import { CreateBidDto } from './dto/create-bid.dto';
 import { UpdateBidDto } from './dto/update-bid.dto';
 import { Negotiation } from './entity/bid-negotiation.entity';
 import { CreateNegotiationDto } from './dto/create-negotiation.dto';
 import { UpdateNegotiationDto } from './dto/update-negotiation.dto';
+import { BidStatus } from 'src/common/enum';
 
 @Injectable()
 export class BidService {
@@ -32,6 +33,23 @@ export class BidService {
 
   async findAllBid(): Promise<Bid[]> {
     return await this.bidRepository.find();
+  }
+
+  async findAllBidByFilter(statuses?: BidStatus[], dealTypes?: DealType[]): Promise<Bid[]> {
+    const query = this.bidRepository.createQueryBuilder('bid');
+    
+    if (statuses && statuses.length > 0) {
+      query.andWhere('bid.requestStatus IN (:...statuses)', { statuses });
+    }
+
+    if (dealTypes && dealTypes.length > 0) {
+      query.andWhere(
+        `(SELECT COUNT(dealType) FROM UNNEST(bid.dealType) dealType WHERE dealType = ANY(:dealTypes)) > 0`,
+        { dealTypes }
+      );
+    }
+  
+    return await query.getMany();
   }
 
   async findOneBid(bid_id: string): Promise<Bid> {

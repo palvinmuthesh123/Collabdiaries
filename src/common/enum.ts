@@ -49,3 +49,30 @@ export enum ReportStatus {
   Reviewed = 'Reviewed',
   Resolved = 'Resolved',
 }
+
+export enum Gender {
+  male='male',
+  female='female',
+  other = 'other'
+}
+
+export enum LocationType {
+  current = 'current',
+  permanent = 'permanent',
+}
+
+export enum DealType {
+  Barter = 'Barter',
+  Paid = 'Paid',
+  Unpaid = 'Unpaid',
+}
+
+export enum BrandMode {
+  Online = 'Online',
+  Offline = 'Offline',
+}
+
+export enum UserType {
+  Brand = 'Brand',
+  CollabUser = 'CollabUser',
+}

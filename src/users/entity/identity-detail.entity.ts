@@ -1,14 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn,} from 'typeorm';
 import {Bid} from '../../bidding/entity/bid.entity';
 import {SocialIdentityCount} from '../../social/entity/social-identity-count.entity';
 import {CollabIdentityCount} from '../../social/entity/collab-identity-count.entity';
@@ -18,33 +8,16 @@ import {SocialLike} from '../../social/entity/social-like.entity';
 import {SocialComment} from '../../social/entity/social-comment.entity';
 import {Promotion} from '../../social/entity/promotion.entity';
 import {Registration} from "./registration.entity";
-import {BrandDetail} from "./brand-detail.entity";
-import {IdentityLocation} from "./identity-location.entity";
+import {IdentityLocation} from "./location.entity";
 import {UserCoverPhoto} from "./user-coverphoto.entity";
-import {UserStatus} from "../../common/enum";
+import {UserStatus, UserType} from "../../common/enum";
 import {NotificationSetting} from "../../notification/entities/notification-setting.entity";
-import {ReferralDetails} from "../../referral/entities/referral.entity";
 import {IdentityBlock} from "../../setting/entities/user-block-setting.entity";
 import {ReportDetails} from "../../setting/entities/report-setting.entity";
-
-export enum DealType {
-  Barter = 'Barter',
-  Paid = 'Paid',
-  Unpaid = 'Unpaid',
-}
-
-export enum BrandMode {
-  Online = 'Online',
-  Offline = 'Offline',
-}
-
-export enum UserType {
-  Brand = 'Brand',
-  CollabUser = 'CollabUser',
-}
+import {BaseCommonEntity} from "../../common/base.entity";
 
 @Entity('identitydetail')
-export class IdentityDetail {
+export class IdentityDetail extends BaseCommonEntity{
   @PrimaryGeneratedColumn('uuid')
   identity_id: string;
 
@@ -57,11 +30,11 @@ export class IdentityDetail {
   @Column({ length: 100, nullable: true })
   brand_name: string;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100, nullable: true,unique:true })
   user_name: string;
 
-  @Column({ type: 'enum', enum: DealType, nullable: true })
-  deal_type: DealType; // Enum for deal types
+  @Column({ type: 'text',array:true,nullable:true})
+  deal_type: string[]
 
   @Column('uuid', { array: true, nullable: true })
   perks: string[];
@@ -76,43 +49,40 @@ export class IdentityDetail {
   currency: string;
 
   @Column({ length: 255, nullable: true })
-  profile_pic: string;
+  profile_image: string;
+
+  @Column({type: 'json', nullable: true,})
+  cover_image_details: {
+    main_cover_image: string;
+    cover_images: string[];
+  };
 
   @Column({ type: 'boolean', default: false })
   is_online: boolean;
 
   @Column({ length: 100, nullable: true })
+  weblink: string;
+
+  @Column('uuid', { array: true, nullable: true })
+  category_id: string[];
+
+  @Column({ length: 100, nullable: true })
   tag_name: string;
 
-  @Column({ length: 100, nullable: true })
-  referral_code: string;
+  @Column({ length: 100, nullable: true,default:null })
+  referral_by_code: string;
 
-  @Column({ length: 100, nullable: true })
-  weblink: string;
+  @Column({ type: 'varchar', nullable: true })
+  qr_code_link?: string;
 
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.active })
   status: UserStatus;
 
-  @Column({ type: 'boolean', default: false })
-  is_deleted: boolean;
-
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_date: Date;
-
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updated_date: Date;
-
   // Relationships
-  @ManyToOne(
-    () => Registration,
-    (registration) => registration.identityDetails,
-    { nullable: true },
-  )
+
+  @ManyToOne(() => Registration, (registration) => registration.identityDetails, { nullable: true },)
   @JoinColumn({ name: 'registration_id' }) // Specify the foreign key column
   registration: Registration;
-
-  @OneToMany(() => BrandDetail, (brandDetail) => brandDetail.identityDetail)
-  brandDetails: BrandDetail[];
 
   @OneToMany(() => Bid, (bid) => bid.identityDetail)
   bid: Bid[];
@@ -120,66 +90,22 @@ export class IdentityDetail {
   @OneToMany(() => Bid, (bid1) => bid1.identityDetail1)
   bid1: Bid[];
 
-  @OneToMany(
-    () => SocialIdentityCount,
-    (socialIdentityCount) => socialIdentityCount.identityDetail,
-  )
-  socialIdentityCount: SocialIdentityCount[];
-
-  @OneToMany(
-    () => CollabIdentityCount,
-    (collabIdentityCount) => collabIdentityCount.identityDetail,
-  )
-  collabIdentityCount: CollabIdentityCount[];
-
-  @OneToMany(
-    () => CollabFollowingDetail,
-    (collabFollowingDetail) => collabFollowingDetail.identityDetail,
-  )
-  collabFollowingDetail: CollabFollowingDetail[];
-
-  @OneToMany(
-    () => CollabFollowingDetail,
-    (collabFollowingDetail) => collabFollowingDetail.identityDetail1,
-  )
-  collabFollowingDetail1: CollabFollowingDetail[];
-
-  @OneToMany(() => SocialPost, (socialPost) => socialPost.identityDetail)
-  socialPost: SocialPost[];
-
-  @OneToMany(() => SocialLike, (socialLike) => socialLike.identityDetail)
-  socialLike: SocialLike[];
-
-  @OneToMany(
-    () => SocialComment,
-    (socialComment) => socialComment.identityDetail,
-  )
+  @OneToMany(() => SocialComment, (socialComment) => socialComment.identityDetail,)
   socialComment: SocialComment[];
 
   @OneToMany(() => Promotion, (promotion) => promotion.identityDetail)
   promotion: Promotion[];
 
-  @OneToMany(
-    () => UserCoverPhoto,
-    (userCoverPhoto) => userCoverPhoto.identityDetail,
-  )
-  userCoverPhoto: UserCoverPhoto[];
+  @OneToMany(() => UserCoverPhoto, (userCoverPhoto) => userCoverPhoto.identityDetail,)
+  identityCoverPhotos: UserCoverPhoto[];
 
-  @OneToMany(
-    () => IdentityLocation,
-    (identitylocation) => identitylocation.identity_detail,
-  )
+  @OneToMany(() => IdentityLocation, (identitylocation) => identitylocation.identity_detail,)
   identitylocation: IdentityLocation[];
 
   @OneToOne(() => NotificationSetting, (notificationSetting) => notificationSetting.identity, {
     cascade: true,
   })
   notificationSetting: NotificationSetting;
-
-  @OneToOne(() => ReferralDetails, (referralDetails) => referralDetails.referral, {
-    cascade: true,
-  })
-  referral: ReferralDetails;
 
   @OneToMany(() => IdentityBlock, (block) => block.blocker)
   blockedUsers: IdentityBlock[];
@@ -192,5 +118,39 @@ export class IdentityDetail {
 
   @OneToMany(() => ReportDetails, (block) => block.reported)
   reportingAccounts: ReportDetails[];
+
+  //======================================
+
+
+
+  @OneToMany(
+      () => SocialIdentityCount,
+      (socialIdentityCount) => socialIdentityCount.identityDetail,
+  )
+  socialIdentityCount: SocialIdentityCount[];
+
+  @OneToMany(
+      () => CollabIdentityCount,
+      (collabIdentityCount) => collabIdentityCount.identityDetail,
+  )
+  collabIdentityCount: CollabIdentityCount[];
+
+  @OneToMany(
+      () => CollabFollowingDetail,
+      (collabFollowingDetail) => collabFollowingDetail.identityDetail,
+  )
+  collabFollowingDetail: CollabFollowingDetail[];
+
+  @OneToMany(
+      () => CollabFollowingDetail,
+      (collabFollowingDetail) => collabFollowingDetail.identityDetail1,
+  )
+  collabFollowingDetail1: CollabFollowingDetail[];
+
+  @OneToMany(() => SocialPost, (socialPost) => socialPost.identityDetail)
+  socialPost: SocialPost[];
+
+  @OneToMany(() => SocialLike, (socialLike) => socialLike.identityDetail)
+  socialLike: SocialLike[];
 }
 

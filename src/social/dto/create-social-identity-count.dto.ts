@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsUUID, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsUUID, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateSocialIdentityCountDto {
   @IsNotEmpty()
@@ -16,4 +16,21 @@ export class CreateSocialIdentityCountDto {
   @IsOptional()
   @IsNumber()
   engagement_rate: number;
+
+  @IsOptional()
+  @IsString()
+  user_id: string;
+
+  @IsOptional()
+  @IsString()
+  access_token: string;
+
+  @IsOptional()
+  @IsString()
+  type: string;
+
+  @IsOptional()
+  @IsString()
+  name: string;
+
 }
