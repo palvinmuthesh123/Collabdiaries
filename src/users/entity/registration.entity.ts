@@ -1,6 +1,6 @@
 import {Column, Entity, OneToMany, PrimaryGeneratedColumn,} from 'typeorm';
 import {IdentityDetail} from './identity-detail.entity';
-import {UserCoverPhoto} from './user-coverphoto.entity';
+import {Gallery} from './gallery.entity';
 import {IdentityLocation} from './location.entity';
 import {Gender, UserStatus} from "../../common/enum";
 import {BaseCommonEntity} from "../../common/base.entity";
@@ -12,6 +12,10 @@ export class Registration extends BaseCommonEntity{
 
   @Column({ length: 100, nullable: true })
   name?: string;
+
+  //TODO=> NULLABLE REMOVE KRNA H
+  @Column({ length: 100, unique: true, nullable: true })
+  full_name?: string;
 
   @Column({ length: 100, unique: true, nullable: true })
   user_name?: string;
@@ -72,19 +76,12 @@ export class Registration extends BaseCommonEntity{
 
   // Relationships
   @OneToMany(
-    () => UserCoverPhoto,
-    (userCoverPhoto) => userCoverPhoto.registration,
-  )
-  userCoverPhotos: UserCoverPhoto[];
+    () => Gallery, (userGallery) => userGallery.registration)
+  userGalleries: Gallery[];
 
-  @OneToMany(
-    () => IdentityDetail,
-    (identityDetail) => identityDetail.registration,
-  )
+  @OneToMany(() => IdentityDetail, (identityDetail) => identityDetail.registration)
   identityDetails: IdentityDetail[];
 
-  @OneToMany(() => IdentityLocation,
-    (identitylocation) => identitylocation.registration,
-  )
+  @OneToMany(() => IdentityLocation, (identitylocation) => identitylocation.registration)
   identitylocation: IdentityLocation[];
 }

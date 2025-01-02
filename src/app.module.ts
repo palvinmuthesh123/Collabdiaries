@@ -10,7 +10,6 @@ import {UsersModule} from './users/users.module';
 import {BiddingModule} from './bidding/bidding.module';
 import {SocialModule} from './social/social.module';
 import {NotificationModule} from './notification/notification.module';
-import {ReferralModule} from './referral/referral.module';
 import {SettingModule} from './setting/setting.module';
 
 @Module({
@@ -26,7 +25,6 @@ import {SettingModule} from './setting/setting.module';
     BiddingModule,
     SocialModule,
     NotificationModule,
-    ReferralModule,
     SettingModule,
   ],
 })

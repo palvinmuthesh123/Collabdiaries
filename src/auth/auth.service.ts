@@ -34,12 +34,14 @@ export class AuthService {
     await this.generateReferralCode()
   }
 
-  async login_firebase(idToken: string, mobile_no: string,referral_code?:string) {
+  async login_firebase(idToken: string, mobile_no: string, referral_code?: string) {
     if (!mobile_no || mobile_no.length < 10) {
       throw new UnauthorizedException('Invalid Mobile Number');
     }
+    const identities = [];
     const decodedToken = await this.firebaseService.verifyIdToken(idToken);
     const userId = decodedToken.uid;
+
     if (userId) {
       let user = await this.registrationRepository.findOneBy({
         mobile_no: mobile_no,
@@ -47,64 +49,98 @@ export class AuthService {
       if (!user) {
         const registration = this.registrationRepository.create({
           mobile_no: mobile_no,
-          referral_code:await this.generateReferralCode()
+          referral_code: await this.generateReferralCode(),
         });
         user = await this.registrationRepository.save(registration);
-   // Create identity
         const createIdentityDetail = this.identityDetailRepository.create({
           registration_id: user.registration_id,
-          referral_by_code:referral_code || null,
-          deal_type:[DealType.Barter, DealType.Paid, DealType.Unpaid]
+          referral_by_code: referral_code || null,
+          deal_type: [DealType.Barter, DealType.Paid, DealType.Unpaid],
         });
-        await this.identityDetailRepository.save(createIdentityDetail);
-        // Create notification setting of every identity
-        const createIdentityNotificationSetting =  this.notificationSettingRepository.create({
-          identity_id:createIdentityDetail.identity_id
-        })
+        const newIdentity = await this.identityDetailRepository.save(createIdentityDetail);
+        const createIdentityNotificationSetting = this.notificationSettingRepository.create({
+          identity_id: newIdentity.identity_id,
+        });
         await this.notificationSettingRepository.save(createIdentityNotificationSetting);
+        identities.push({
+          identity_id: newIdentity.identity_id,
+          user_type: newIdentity.user_type,
+        });
+      } else {
+        // Fetch identities for the existing user
+        const identityDetails = await this.identityDetailRepository.find({
+          where: { registration_id: user.registration_id },
+        });
+        identityDetails.map((identity) => {
+          identities.push({
+            identity_id: identity.identity_id,
+            user_type: identity.user_type,
+          });
+        });
       }
-
+      // Generate JWT token
       const jwtToken = this.jwtService.sign({
         registration_id: user.registration_id,
         mobile_no: user.mobile_no,
       });
-      return { ...user, accessToken: jwtToken };
+      return { ...user, identities, accessToken: jwtToken };
     } else {
       throw new UnauthorizedException('Invalid Id token');
     }
   }
 
   //***For Testing Purpose
-  async login_test(mobile_no: string,referral_code?:string) {
+  async login_test(mobile_no: string, referral_code?: string) {
     if (!mobile_no || mobile_no.length < 10) {
       throw new UnauthorizedException('Invalid Mobile Number');
     }
+    const identities = [];
     let user = await this.registrationRepository.findOneBy({
       mobile_no: mobile_no,
     });
     if (!user) {
       const registration = this.registrationRepository.create({
         mobile_no: mobile_no,
-        referral_code:await this.generateReferralCode()
+        referral_code: await this.generateReferralCode(),
       });
       user = await this.registrationRepository.save(registration);
 
       const createIdentityDetail = this.identityDetailRepository.create({
         registration_id: user.registration_id,
-        referral_by_code:referral_code,
-        deal_type:[DealType.Barter, DealType.Paid, DealType.Unpaid]
+        referral_by_code: referral_code,
+        deal_type: [DealType.Barter, DealType.Paid, DealType.Unpaid],
       });
-      await this.identityDetailRepository.save(createIdentityDetail);
-      // Create notification setting of every identity
-      const createIdentityNotificationSetting =  this.notificationSettingRepository.create({
-        identity_id:createIdentityDetail.identity_id
-      })
+      const newIdentity = await this.identityDetailRepository.save(createIdentityDetail);
+
+      // Create notification setting for the new identity
+      const createIdentityNotificationSetting = this.notificationSettingRepository.create({
+        identity_id: newIdentity.identity_id,
+      });
       await this.notificationSettingRepository.save(createIdentityNotificationSetting);
+
+      // Add the newly created identity to the identities list
+      identities.push({
+        identity_id: newIdentity.identity_id,
+        user_type: newIdentity.user_type,
+      });
+    } else {
+      // Fetch identities for the existing user
+      const identityDetails = await this.identityDetailRepository.find({
+        where: { registration_id: user.registration_id },
+      });
+
+      identityDetails.map((identity) => {
+        identities.push({
+          identity_id: identity.identity_id,
+          user_type: identity.user_type,
+        });
+      });
     }
-    const jwtToken = this.jwtService.sign({
+    const accessToken = this.jwtService.sign({
       registration_id: user.registration_id,
       mobile_no: user.mobile_no,
     });
-    return { ...user, accessToken: jwtToken };
+    return { ...user, identities, accessToken };
   }
+
 }

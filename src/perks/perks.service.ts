@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Perks } from './perks.entity';
-import { CreatePerksDto } from './dto/create-perks.dto';
-import { UpdatePerksDto } from './dto/update-perks.dto';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {Perks} from './perks.entity';
+import {CreatePerksDto} from './dto/create-perks.dto';
+import {UpdatePerksDto} from './dto/update-perks.dto';
 
 @Injectable()
 export class PerksService {
@@ -13,6 +13,7 @@ export class PerksService {
   ) {}
 
   async create(createPerksDto: CreatePerksDto): Promise<Perks> {
+    if (!createPerksDto.name) throw new NotFoundException('perk name is required')
     const perks = this.perksRepository.create(createPerksDto);
     return this.perksRepository.save(perks);
   }
@@ -22,7 +23,7 @@ export class PerksService {
   }
 
   async findOne(id: string): Promise<Perks> {
-    const perks = await this.perksRepository.findOneBy({ perks_id: id });
+    const perks = await this.perksRepository.findOneBy({ perk_id: id });
     if (!perks) {
       throw new NotFoundException(`Perks with ID ${id} not found`);
     }

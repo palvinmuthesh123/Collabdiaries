@@ -1,13 +1,5 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import {LinkType} from "../../common/enum";
+import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,} from 'typeorm';
+import {LinkType, PromotionType} from "../../common/enum";
 import {IdentityDetail} from "../../users/entity/identity-detail.entity";
 
 @Entity('promotion')
@@ -19,41 +11,34 @@ export class Promotion {
   identity_id: string;
 
   @Column({ type: 'text' })
-  label_name: string;
-
-  @Column({ type: 'text' })
-  link: string;
+  label: string;
 
   @Column({ type: 'text' })
   desc: string;
 
-  @Column({ type: 'text' })
-  image_detail: string;
+  @Column({ type: 'text',nullable:true })
+  logo_details?: string;
 
-  @Column({ type: 'text' })
-  type: string;
+  @Column({ type: 'text',nullable:true })
+  cover_image?: string;
 
-  @Column({ type: 'text' })
-  type_id: string;
+  @Column({ type: 'enum',enum:PromotionType })
+  type: PromotionType;
 
-  @Column({
-    type: 'enum',
-    enum: LinkType,
-    nullable: true, // Allows null values
-  })
+  @Column({type: 'enum',enum: LinkType})
   link_type: LinkType;
 
   @Column({ type: 'numeric' })
   priority: number;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_date: Date;
+  @Column({ type: 'boolean',default:false })
+  isBanner: boolean;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updated_date: Date;
+  @Column({ type: 'boolean',default:false })
+  isHide: boolean;
 
   // Relationships
-  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.promotion)
+  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.promotions)
   @JoinColumn({ name: 'identity_id' })
   identityDetail: IdentityDetail;
 }

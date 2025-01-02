@@ -21,5 +21,4 @@ export class AuthController {
   async login_test(@Body() body: { mobile_no: string ,referral_code?:string }) {
     return this.authService.login_test(body.mobile_no,body.referral_code);
   }
-
 }

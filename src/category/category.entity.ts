@@ -1,16 +1,11 @@
-import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn,} from 'typeorm';
+import {Column, Entity, PrimaryGeneratedColumn,} from 'typeorm';
+import {BaseCommonEntity} from "../common/base.entity";
 
 @Entity('category')
-export class Category {
+export class Category extends BaseCommonEntity{
   @PrimaryGeneratedColumn('uuid')
   category_id: string;
 
   @Column({ length: 100 })
-  category_name: string;
-
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_date: Date;
-
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updated_date: Date;
+  name: string;
 }

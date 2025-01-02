@@ -1,5 +1,5 @@
-import {IsNotEmpty, IsUUID, IsString, IsNumber, IsEnum, IsOptional} from 'class-validator';
-import {LinkType} from "../../common/enum";
+import {IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID} from 'class-validator';
+import {LinkType, PromotionType} from '../../common/enum';
 
 export class CreatePromotionDto {
   @IsNotEmpty()
@@ -8,34 +8,33 @@ export class CreatePromotionDto {
 
   @IsNotEmpty()
   @IsString()
-  label_name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  link: string;
+  label: string;
 
   @IsNotEmpty()
   @IsString()
   desc: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  image_detail: string;
-
-  @IsNotEmpty()
-  @IsString()
-  type: string;
-
-  @IsNotEmpty()
-  @IsString()
-  type_id: string;
+  logo_details?: string;
 
   @IsOptional()
   @IsString()
+  cover_image?: string;
+
+  @IsNotEmpty()
+  @IsEnum(PromotionType)
+  type: PromotionType;
+
+  @IsNotEmpty()
   @IsEnum(LinkType)
   link_type: LinkType;
 
   @IsNotEmpty()
   @IsNumber()
   priority: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isBanner?: boolean;
 }

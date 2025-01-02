@@ -1,3 +1,6 @@
+export const identityRelations = ['registration','identitylocation','brandGalleries','notificationSetting','promotions','blockedUsers','blockingUsers']
+
+
 export enum LinkType {
   hyperlink = 'hyperlink',
   linktree = 'linktree',
@@ -15,15 +18,16 @@ export enum NotificationMethod {
 }
 
 export enum NotificationType {
-  POSTS = 'Posts',
-  CONNECTS = 'Connects',
-  REMINDERS = 'Reminders',
-  LABELS = 'Labels',
-  NEARBY_INFLUENCERS = 'Nearby Influencers',
-  NEARBY_BRANDS = 'Nearby Brands',
-  MESSAGES = 'Messages',
-  UNKNOWN_MESSAGES = 'UnknownMessages',
+  posts = 'posts',
+  connects = 'connects',
+  reminders = 'reminders',
+  labels = 'labels',
+  nearby_influencers = 'nearby_influencers',
+  nearby_brands = 'nearby_brands',
+  messages = 'messages',
+  unknown_messages = 'unknown_messages',
 }
+
 export enum UserStatus {
   hold='hold',
   hide='hide',
@@ -65,6 +69,7 @@ export enum DealType {
   Barter = 'Barter',
   Paid = 'Paid',
   Unpaid = 'Unpaid',
+
 }
 
 export enum BrandMode {
@@ -72,7 +77,18 @@ export enum BrandMode {
   Offline = 'Offline',
 }
 
-export enum UserType {
+export enum
+UserType {
   Brand = 'Brand',
   CollabUser = 'CollabUser',
+}
+
+export enum GalleryType {
+  Brand = 'Brand',
+  User = 'User',
+}
+
+export enum PromotionType {
+  coupon_code='coupon_code',
+  app_opener ='app_opener'
 }

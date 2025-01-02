@@ -9,7 +9,7 @@ import {SocialComment} from '../../social/entity/social-comment.entity';
 import {Promotion} from '../../social/entity/promotion.entity';
 import {Registration} from "./registration.entity";
 import {IdentityLocation} from "./location.entity";
-import {UserCoverPhoto} from "./user-coverphoto.entity";
+import {Gallery} from "./gallery.entity";
 import {UserStatus, UserType} from "../../common/enum";
 import {NotificationSetting} from "../../notification/entities/notification-setting.entity";
 import {IdentityBlock} from "../../setting/entities/user-block-setting.entity";
@@ -71,7 +71,7 @@ export class IdentityDetail extends BaseCommonEntity{
 
   @Column({ length: 100, nullable: true,default:null })
   referral_by_code: string;
-
+//TODO => ISKO NULLABEL FALSE KRNA H
   @Column({ type: 'varchar', nullable: true })
   qr_code_link?: string;
 
@@ -81,7 +81,7 @@ export class IdentityDetail extends BaseCommonEntity{
   // Relationships
 
   @ManyToOne(() => Registration, (registration) => registration.identityDetails, { nullable: true },)
-  @JoinColumn({ name: 'registration_id' }) // Specify the foreign key column
+  @JoinColumn({ name: 'registration_id' })
   registration: Registration;
 
   @OneToMany(() => Bid, (bid) => bid.identityDetail)
@@ -94,10 +94,10 @@ export class IdentityDetail extends BaseCommonEntity{
   socialComment: SocialComment[];
 
   @OneToMany(() => Promotion, (promotion) => promotion.identityDetail)
-  promotion: Promotion[];
+  promotions: Promotion[];
 
-  @OneToMany(() => UserCoverPhoto, (userCoverPhoto) => userCoverPhoto.identityDetail,)
-  identityCoverPhotos: UserCoverPhoto[];
+  @OneToMany(() => Gallery, (brandGallery) => brandGallery.identityDetail,)
+  brandGalleries: Gallery[];
 
   @OneToMany(() => IdentityLocation, (identitylocation) => identitylocation.identity_detail,)
   identitylocation: IdentityLocation[];

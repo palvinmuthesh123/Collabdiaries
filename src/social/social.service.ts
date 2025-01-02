@@ -1,31 +1,33 @@
-import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
 
-import { CollabFollowingDetail } from './entity/collab-following-detail.entity';
-import { CollabIdentityCount } from './entity/collab-identity-count.entity';
-import { Promotion } from './entity/promotion.entity';
-import { SocialComment } from './entity/social-comment.entity';
-import { SocialIdentityCount } from './entity/social-identity-count.entity';
-import { SocialLike } from './entity/social-like.entity';
-import { SocialPost } from './entity/social-post.entity';
+import {CollabFollowingDetail} from './entity/collab-following-detail.entity';
+import {CollabIdentityCount} from './entity/collab-identity-count.entity';
+import {Promotion} from './entity/promotion.entity';
+import {SocialComment} from './entity/social-comment.entity';
+import {SocialIdentityCount} from './entity/social-identity-count.entity';
+import {SocialLike} from './entity/social-like.entity';
+import {SocialPost} from './entity/social-post.entity';
 
-import { CreateCollabFollowingDetailDto } from './dto/create-collab-following.dto';
-import { UpdateCollabFollowingDetailDto } from './dto/update-collab-following.dto';
-import { CreateCollabIdentityCountDto } from './dto/create-collab-identitycount.dto';
-import { UpdateCollabIdentityCountDto } from './dto/update-collab-identitycount.dto';
-import { CreatePromotionDto } from './dto/create-promotion.dto';
-import { UpdatePromotionDto } from './dto/update-promotion.dto';
-import { CreateSocialCommentDto } from './dto/create-social-comment.dto';
-import { UpdateSocialCommentDto } from './dto/update-social-comment.dto';
-import { CreateSocialIdentityCountDto } from './dto/create-social-identity-count.dto';
-import { UpdateSocialIdentityCountDto } from './dto/update-social-identity-count.dto';
-import { CreateSocialLikeDto } from './dto/create-social-like.dto';
-import { UpdateSocialLikeDto } from './dto/update-social-like.dto';
-import { CreateSocialPostDto } from './dto/create-social-post.dto';
-import { UpdateSocialPostDto } from './dto/update-social-post.dto';
+import {CreateCollabFollowingDetailDto} from './dto/create-collab-following.dto';
+import {UpdateCollabFollowingDetailDto} from './dto/update-collab-following.dto';
+import {CreateCollabIdentityCountDto} from './dto/create-collab-identitycount.dto';
+import {UpdateCollabIdentityCountDto} from './dto/update-collab-identitycount.dto';
+import {CreatePromotionDto} from './dto/create-promotion.dto';
+import {UpdatePromotionDto} from './dto/update-promotion.dto';
+import {CreateSocialCommentDto} from './dto/create-social-comment.dto';
+import {UpdateSocialCommentDto} from './dto/update-social-comment.dto';
+import {CreateSocialIdentityCountDto} from './dto/create-social-identity-count.dto';
+import {UpdateSocialIdentityCountDto} from './dto/update-social-identity-count.dto';
+import {CreateSocialLikeDto} from './dto/create-social-like.dto';
+import {UpdateSocialLikeDto} from './dto/update-social-like.dto';
+import {CreateSocialPostDto} from './dto/create-social-post.dto';
+import {UpdateSocialPostDto} from './dto/update-social-post.dto';
 import * as https from 'https';
-import { OAuth2Client } from 'google-auth-library';
+import {OAuth2Client} from 'google-auth-library';
+import {LinkType} from "../common/enum";
+import {FindAllPromotionDto} from "./dto/findAllPromotion.dto";
 
 @Injectable()
 export class SocialService {
@@ -253,10 +255,43 @@ export class SocialService {
     }
   }
 
-  //Promotion
+  //Promotion ==========================================================================================
+
   async createPromotion(createDto: CreatePromotionDto): Promise<Promotion> {
     const promotion = this.promotionRepository.create(createDto);
     return await this.promotionRepository.save(promotion);
+  }
+
+  async findAllPromotion(input:FindAllPromotionDto): Promise<Promotion[]> {
+    const {isHide,identity_id}=input
+    const whereConditions: any = {};
+    if (isHide) whereConditions.isHide = isHide;
+    if (identity_id) whereConditions.identity_id = identity_id;
+    return await this.promotionRepository.find({
+      where: whereConditions,
+    });
+  }
+
+  async findOnePromotion(id: string): Promise<Promotion> {
+    const promotion = await this.promotionRepository.findOne({
+      where: { promotion_id: id },
+    });
+    if (!promotion) {
+      throw new NotFoundException(`Promotion with ID ${id} not found`);
+    }
+    return promotion;
+  }
+
+  async promotionsWithIdentityId(identity_id:string,link_type:LinkType):Promise<Promotion[]>{
+    if (!identity_id) throw new NotFoundException('identity_id is required')
+    const promotions = await this.promotionRepository.find({where:{identity_id:identity_id}})
+    if (link_type === LinkType.hyperlink){
+      return promotions.filter((promo)=>promo.link_type === LinkType.hyperlink)
+    }
+    if (link_type === LinkType.linktree){
+      return promotions.filter((promo)=>promo.link_type === LinkType.linktree)
+    }
+    return promotions
   }
 
   async updatePromotion(
@@ -270,23 +305,8 @@ export class SocialService {
     if (!promotion) {
       throw new NotFoundException(`Promotion with ID ${id} not found`);
     }
-
     Object.assign(promotion, updateDto);
     return await this.promotionRepository.save(promotion);
-  }
-
-  async findAllPromotion(): Promise<Promotion[]> {
-    return await this.promotionRepository.find();
-  }
-
-  async findOnePromotion(id: string): Promise<Promotion> {
-    const promotion = await this.promotionRepository.findOne({
-      where: { promotion_id: id },
-    });
-    if (!promotion) {
-      throw new NotFoundException(`Promotion with ID ${id} not found`);
-    }
-    return promotion;
   }
 
   async removePromotion(id: string): Promise<void> {
@@ -296,7 +316,7 @@ export class SocialService {
     }
   }
 
-  //Social comment
+  //Social comment ==========================================================================
   async createSocialComment(
     createDto: CreateSocialCommentDto,
   ): Promise<SocialComment> {

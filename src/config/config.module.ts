@@ -5,7 +5,6 @@ import {Registration} from '../users/entity/registration.entity';
 import {Category} from '../category/category.entity';
 import {IdentityDetail} from '../users/entity/identity-detail.entity';
 import {IdentityLocation} from '../users/entity/location.entity';
-import {UserCoverPhoto} from '../users/entity/user-coverphoto.entity';
 import {Country} from '../country/country.entity';
 import {State} from '../state/state.entity';
 import {City} from '../city/city.entity';
@@ -21,9 +20,9 @@ import {SocialComment} from '../social/entity/social-comment.entity';
 import {SocialPost} from '../social/entity/social-post.entity';
 import {Notification} from "../notification/entities/notification.entity";
 import {NotificationSetting} from "../notification/entities/notification-setting.entity";
-import {ReferralDetails} from "../referral/entities/referral.entity";
 import {IdentityBlock} from "../setting/entities/user-block-setting.entity";
 import {ReportDetails} from "../setting/entities/report-setting.entity";
+import {Gallery} from "../users/entity/gallery.entity";
 
 @Module({
   imports: [
@@ -42,7 +41,7 @@ import {ReportDetails} from "../setting/entities/report-setting.entity";
         Category,
         IdentityDetail,
         IdentityLocation,
-        UserCoverPhoto,
+        Gallery,
         Country,
         State,
         City,
@@ -58,11 +57,11 @@ import {ReportDetails} from "../setting/entities/report-setting.entity";
         SocialPost,
         Notification,
         NotificationSetting,
-        ReferralDetails,
         IdentityBlock,
         ReportDetails,
+          Gallery,
       ],
-      logging: true, // Enable logging to check synchronization queries
+      logging: false, // Enable logging to check synchronization queries
       ssl: {
         rejectUnauthorized: false,
         // ca: process.env.POSTGRES_SSL_SERVER_CA_CERTIFICATE,

@@ -9,50 +9,45 @@ import {UpdateReportDetailsDto} from "./dto/update-report.dto";
 export class SettingController {
   constructor(private readonly settingService: SettingService) {}
 
-  @Post('block-user')
+  @Post('block/user')
   async blockUser(@Body() payload:CreateBlockIdentityDto):Promise<{message:string}> {
     await this.settingService.blockUser(payload);
     return { message: 'User blocked successfully' };
   }
 
-  @Post('unblock-user')
+  @Post('unblock/user')
   async unblockUser(
-      @Body() { blockerId, blockedId }: { blockerId: string; blockedId: string },
+      @Body() { blocker_Id, blocked_Id }: { blocker_Id: string; blocked_Id: string },
   ):Promise<{message:string}> {
-    await this.settingService.unblockUser(blockerId, blockedId);
+    await this.settingService.unblockUser(blocker_Id, blocked_Id);
     return { message: 'User unblocked successfully' };
   }
 
-  @Get('is-blocked')
-  async isBlocked( @Body() { blockerId, blockedId }: { blockerId: string; blockedId: string }):Promise<boolean> {
-    return await this.settingService.isBlocked(blockerId, blockedId)
-  }
-
-  @Get('blocked-users/:blockerId')
+  @Get('blocked/users/:blockerId')
   async getBlockedUsers(@Param('blockerId') blockerId: string):Promise<IdentityBlock[]> {
     return await this.settingService.getBlockedUsers(blockerId);
   }
 
-  //Report Basic logic
+  //Report Basic logic ===============================
 
   @Post('report')
   async create(@Body() createDto: CreateReportDetailsDto) {
     return this.settingService.create(createDto);
   }
 
-  @Get('reports')
+  @Get('reports/list')
   async findAll() {
     return this.settingService.findAll();
   }
 
-  @Get('report:id')
+  @Get('report/:id')
   async findOne(@Param('id') id: string) {
     return this.settingService.findOne(id);
   }
 
-  @Put('report:id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateReportDetailsDto) {
-    return this.settingService.update(id, updateDto);
+  @Put('report/update/:id')
+  async updateReportStatus(@Param('id') id: string, @Body() updateDto: UpdateReportDetailsDto) {
+    return this.settingService.updateReportStatus(id, updateDto);
   }
 
   @Delete('report:id')

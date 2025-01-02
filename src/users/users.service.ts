@@ -4,18 +4,13 @@ import {Not, Repository} from 'typeorm';
 import {CreateIdentityDetailDto} from './dto/identity/create-identity-detail.dto';
 import {UpdateIdentityDetailDto} from './dto/identity/update-identity-detail.dto';
 import {CreateIdentityLocationDto} from './dto/location/create-identity-location.dto';
-import {CreateUserCoverPhotoDto} from './dto/create-user-coverphoto.dto';
-import {UpdateUserCoverPhotoDto} from './dto/update-user-coverphoto.dto';
 import {UpdateRegistrationsDto} from './dto/registrations/update-registration.dto';
 import {IdentityDetail} from './entity/identity-detail.entity';
 import {IdentityLocation} from './entity/location.entity';
 import {Registration} from './entity/registration.entity';
-import {UserCoverPhoto} from './entity/user-coverphoto.entity';
+import {Gallery} from './entity/gallery.entity';
 import {UpdateStatusDto} from "../common/common-dto";
-import * as fs from 'fs';
-import * as path from 'path';
-import * as dotenv from 'dotenv';
-import {DealType, LocationType, UserStatus, UserType} from "../common/enum";
+import {DealType, GalleryType, identityRelations, LocationType, UserStatus, UserType} from "../common/enum";
 import {BlockRegisterDto} from "./dto/registrations/block-register.dto";
 import {UpdateRegistrationProfileDto} from "./dto/registrations/update-registration-profile.dto";
 import {VerifyUsernameDto} from "./dto/registrations/verify-username.dto";
@@ -28,11 +23,12 @@ import {UpdateUserLocationDto} from "./dto/location/update-user-location.dto";
 import {UpdateRegistrationCoverImageDto} from "./dto/registrations/update-registration-cover-image.dto";
 import {UpdateIdentityProfileDto} from "./dto/identity/update-identity-profile.dto";
 import {NearbyBrandAndInfluencerDto} from "./dto/location/nearby-influencer.dto";
+import {CreateBrandGalleryDto} from "./dto/gallery/create-brand-gallery.dto";
+import {CreateUserGalleryDto} from "./dto/gallery/create-user-gallery.dto";
+import {UpdateGalleryDto} from "./dto/gallery/update-gallery.dto";
 
 @Injectable()
 export class UsersService {
-  private envPath = path.resolve(__dirname, '../../.env');
-  private influencerThreshold: number;
   constructor(
     @InjectRepository(IdentityDetail)
     private readonly identityDetailRepository: Repository<IdentityDetail>,
@@ -40,12 +36,9 @@ export class UsersService {
     private readonly identityLocationRepository: Repository<IdentityLocation>,
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
-    @InjectRepository(UserCoverPhoto)
-    private userCoverPhotoRepository: Repository<UserCoverPhoto>,
-  ) {
-    dotenv.config({ path: this.envPath });
-    this.influencerThreshold = parseInt(process.env.INFLUENCER_THRESHOLD || '1000', 10);
-   }
+    @InjectRepository(Gallery)
+    private galleryRepository: Repository<Gallery>,
+  ) { }
 
   async commonFindOneRegistrationWithSafetyConditions(id: string): Promise<Registration> {
     const registerUser = await this.registrationRepository.findOne({
@@ -86,7 +79,7 @@ export class UsersService {
 
   async findOneRegistration(id: string): Promise<Registration> {
     const registerUser = await this.registrationRepository.findOne({
-      where: { registration_id: id, is_deleted: false,status:Not(UserStatus.hide) }, relations: ['identityDetails','userCoverPhotos','identitylocation']
+      where: { registration_id: id, is_deleted: false,status:Not(UserStatus.hide) }, relations: ['identityDetails','userGalleries','identitylocation']
     });
     if (registerUser) return registerUser
     throw new NotFoundException(`Registration with ID ${id} not found`);
@@ -188,44 +181,6 @@ export class UsersService {
     } throw new NotFoundException(`Registration with ID ${id} not found`);
   }
 
-  async createIdentityLocation(
-    createIdentityLocationDto: CreateIdentityLocationDto,
-  ): Promise<IdentityLocation> {
-    const identityLocation = this.identityLocationRepository.create(
-      createIdentityLocationDto,
-    );
-    return await this.identityLocationRepository.save(identityLocation);
-  }
-
-  async ChangeThreshold(newThreshold: number): Promise<void> {
-    process.env.INFLUENCER_THRESHOLD = newThreshold.toString();
-    this.saveToEnvFile('INFLUENCER_THRESHOLD', newThreshold.toString());
-  }
-
-  async GetThreshold(): Promise<number> {
-    return parseInt(process.env.INFLUENCER_THRESHOLD)
-  }
-
-  private saveToEnvFile(key: string, value: string): void {
-    let envContent = '';
-    if (fs.existsSync(this.envPath)) {
-      envContent = fs.readFileSync(this.envPath, 'utf8');
-    }
-    const envLines = envContent.split('\n');
-    const updatedLines = new Map<string, string>();
-    for (const line of envLines) {
-      const [existingKey, ...existingValueParts] = line.split('=');
-      if (existingKey) {
-        updatedLines.set(existingKey.trim(), existingValueParts.join('=').trim());
-      }
-    }
-    updatedLines.set(key, value);
-    const newEnvContent = Array.from(updatedLines.entries())
-      .map(([k, v]) => `${k}=${v}`)
-      .join('\n');
-    fs.writeFileSync(this.envPath, newEnvContent, 'utf8');
-  }
-
   // this function is run automatic with cron-job
   async updateReferralCount():Promise<void> {
     const users = await this.registrationRepository.find({where:{ referral_code: Not(null),}});
@@ -269,7 +224,7 @@ export class UsersService {
     return this.identityDetailRepository.save(identityDetail);
   }
 
-  async findAll(): Promise<IdentityDetail[]> {
+  async findAllIdentity(): Promise<IdentityDetail[]> {
     return this.identityDetailRepository.find({
       where: {is_deleted: false, status: Not(UserStatus.hide)}
     });
@@ -277,7 +232,7 @@ export class UsersService {
 
   async commonFindOneIdentityDetailWithSafetyConditions(id: string): Promise<IdentityDetail> {
     const identityDetail = await this.identityDetailRepository.findOne({
-      where: { identity_id: id, is_deleted: false }, relations: ['registration','identitylocation','identityCoverPhotos','notificationSetting']
+      where: { identity_id: id, is_deleted: false }, relations: identityRelations
     })
     if (!identityDetail) {
       throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
@@ -285,10 +240,9 @@ export class UsersService {
     if (identityDetail.status === UserStatus.disable) { throw new NotFoundException(`IdentityDetail with ID ${id} status is disable`); }
     return identityDetail;
   }
-
   async findOne(id: string): Promise<IdentityDetail> {
     const identityDetail = await this.identityDetailRepository.findOne({
-      where: { identity_id: id, is_deleted: false }, relations: ['registration','identitylocation','identityCoverPhotos','notificationSetting'],
+      where: { identity_id: id, is_deleted: false }, relations: identityRelations,
     });
     if (!identityDetail) {
       throw new NotFoundException(`IdentityDetail with ID ${id} not found`);
@@ -354,7 +308,7 @@ export class UsersService {
 
   async particularUserBrands(id: string): Promise<IdentityDetail[]> {
     return this.identityDetailRepository.find({
-      where: { registration_id: id, is_deleted: false}, relations: ['registration','identitylocation','identityCoverPhotos','notificationSetting']});
+      where: { registration_id: id, is_deleted: false}, relations: identityRelations});
   }
 
   async updateIdentityProfileImage(id: string,inputData: UpdateIdentityProfileDto): Promise<IdentityDetail> {
@@ -486,7 +440,7 @@ export class UsersService {
             'identityDetail.socialIdentityCount',
             'socialIdentityCount',
             'socialIdentityCount.follower_count > :minFollowerCount',
-            { minFollowerCount: this.influencerThreshold },
+            { minFollowerCount: 1000 },
         )
         .where(
             `6371 * acos(
@@ -570,59 +524,80 @@ export class UsersService {
   }
 
 
-// cover photo logic =============================================================================================
+//Gallery logic =============================================================================================
 
-
-
-
-
-  async createUserCoverPhoto(
-    createUserCoverPhotoDto: CreateUserCoverPhotoDto,
-  ): Promise<UserCoverPhoto> {
-    const newCoverPhoto = this.userCoverPhotoRepository.create(
-      createUserCoverPhotoDto,
-    );
-    return this.userCoverPhotoRepository.save(newCoverPhoto);
+  async createBrandGallery(inputData: CreateBrandGalleryDto): Promise<Gallery> {
+    if (!inputData.identity_id) throw new BadRequestException('identity id is must required')
+    const existGallery = await this.galleryRepository.findOne({where:{identity_id:inputData.identity_id,type:GalleryType.Brand}})
+    if (existGallery) throw new BadRequestException('this brand gallery is already created you can update only')
+    const brandGallery = this.galleryRepository.create(inputData);
+    brandGallery.type = GalleryType.Brand
+    return this.galleryRepository.save(brandGallery);
   }
 
-  async findAllUserCoverPhoto(): Promise<UserCoverPhoto[]> {
-    return this.userCoverPhotoRepository.find({
-      relations: ['registration', 'identityDetail'],
-    }); // Include related entities
+  async createUserGallery(inputData: CreateUserGalleryDto): Promise<Gallery> {
+    if (!inputData.registration_id) throw new BadRequestException('registration_id is must required')
+    const existGallery = await this.galleryRepository.findOne({where:{registration_id:inputData.registration_id,type:GalleryType.User}})
+    if (existGallery) throw new BadRequestException('this user gallery is already created you can update only')
+    const userGallery = this.galleryRepository.create(inputData);
+    userGallery.type = GalleryType.User
+    return this.galleryRepository.save(userGallery);
   }
 
-  async findOneUserCoverPhoto(id: string): Promise<UserCoverPhoto> {
-    const coverPhoto = await this.userCoverPhotoRepository.findOne({
-      where: { cover_photos_id: id },
-      relations: ['registration', 'identityDetail'],
-    });
-    if (!coverPhoto) {
-      throw new NotFoundException('User  cover photo not found');
+  async findAllGallery():Promise<Gallery[]> {
+    return  this.galleryRepository.find()
+  }
+
+  async findOneGallery(id:string):Promise<Gallery>{
+    const gallery = await this.galleryRepository.findOne({where:{gallery_id:id}})
+    if (gallery) return gallery
+    throw new NotFoundException('gallery is not found')
+  }
+
+  async addGalleryImage(input:UpdateGalleryDto):Promise<Gallery>{
+    const {identity_id,registration_id,type,links}=input
+    if (!type) throw new BadRequestException('gallery type is required')
+  if (type === GalleryType.User){
+  if (!registration_id) throw new BadRequestException('If you want to update user gallery, registrationId is required')
+    const userGallery = await this.galleryRepository.findOne({ where: { registration_id:registration_id,type:type } });
+    if (!userGallery) throw new NotFoundException('Gallery not found');
+    userGallery.link = [...new Set([...(userGallery.link || []), ...links])];
+    return this.galleryRepository.save(userGallery);
+}else {
+    if (!identity_id) throw new BadRequestException('If you want to update brand gallery, identityId is required')
+    const brandGallery = await this.galleryRepository.findOne({ where: { identity_id:identity_id,type:type } });
+    if (!brandGallery) throw new NotFoundException('Gallery not found');
+    brandGallery.link = [...new Set([...(brandGallery.link || []), ...links])];
+    return this.galleryRepository.save(brandGallery);
+  }
+  }
+
+  async removeGalleryImage(input: UpdateGalleryDto): Promise<Gallery> {
+    const { identity_id, registration_id, type, links } = input;
+    if (!type) throw new BadRequestException('Gallery type is required');
+    if (type === GalleryType.User) {
+      if (!registration_id) throw new BadRequestException('If you want to update user gallery, registrationId is required');
+      const userGallery = await this.galleryRepository.findOne({
+        where: { registration_id: registration_id, type: type },
+      });
+      if (!userGallery) throw new NotFoundException('Gallery not found');
+      userGallery.link = userGallery.link.filter((link) => !links.includes(link));
+      return this.galleryRepository.save(userGallery);
+    } else {
+      if (!identity_id) throw new BadRequestException('If you want to update brand gallery, identityId is required');
+      const brandGallery = await this.galleryRepository.findOne({
+        where: { identity_id: identity_id, type: type },
+      });
+      if (!brandGallery) throw new NotFoundException('Gallery not found');
+      brandGallery.link = brandGallery.link.filter((link) => !links.includes(link));
+      return this.galleryRepository.save(brandGallery);
     }
-    return coverPhoto;
   }
 
-  async updateUserCoverPhoto(
-    id: string,
-    updateUserCoverPhotoDto: UpdateUserCoverPhotoDto,
-  ): Promise<UserCoverPhoto> {
-    const getdata = await this.findOneUserCoverPhoto(id); // Check if the cover photo exists
-    if (
-      updateUserCoverPhotoDto.link &&
-      getdata.link &&
-      getdata.link.length > 0
-    ) {
-      updateUserCoverPhotoDto.link.concat(getdata.link);
-    }
-    await this.userCoverPhotoRepository.update(id, updateUserCoverPhotoDto);
-    return this.userCoverPhotoRepository.findOne({
-      where: { cover_photos_id: id },
-      relations: ['registration', 'identityDetail'],
-    });
-  }
-
-  async removeUserCoverPhoto(id: string): Promise<void> {
-    const coverPhoto = await this.findOneUserCoverPhoto(id);
-    await this.userCoverPhotoRepository.remove(coverPhoto);
+  async removeGallery(id: string): Promise<void> {
+    if (!id) throw new BadRequestException('Gallery ID is required');
+    const gallery = await this.galleryRepository.findOne({ where: { gallery_id: id } });
+    if (!gallery) throw new NotFoundException('Gallery not found');
+    await this.galleryRepository.delete({ gallery_id: id });
   }
 }

@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Put,
   Query,
@@ -18,12 +17,10 @@ import {CreateIdentityDetailDto} from './dto/identity/create-identity-detail.dto
 import {UpdateIdentityDetailDto} from './dto/identity/update-identity-detail.dto';
 import {CreateIdentityLocationDto} from './dto/location/create-identity-location.dto';
 import {UpdateRegistrationsDto} from './dto/registrations/update-registration.dto';
-import {CreateUserCoverPhotoDto} from './dto/create-user-coverphoto.dto';
-import {UpdateUserCoverPhotoDto} from './dto/update-user-coverphoto.dto';
 import {IdentityLocation} from './entity/location.entity';
 import {IdentityDetail} from './entity/identity-detail.entity';
 import {Registration} from './entity/registration.entity';
-import {UserCoverPhoto} from './entity/user-coverphoto.entity';
+import {Gallery} from './entity/gallery.entity';
 import {S3Service} from '../utils/s3.service';
 import {ApiOperation, ApiTags} from '@nestjs/swagger';
 import {UpdateStatusDto} from "../common/common-dto";
@@ -40,6 +37,9 @@ import {UpdateIdentityProfileDto} from "./dto/identity/update-identity-profile.d
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {UpdateIdentityCoverImageDto} from "./dto/identity/update-identity-cover-image.dto";
 import {NearbyBrandAndInfluencerDto} from "./dto/location/nearby-influencer.dto";
+import {CreateBrandGalleryDto} from "./dto/gallery/create-brand-gallery.dto";
+import {CreateUserGalleryDto} from "./dto/gallery/create-user-gallery.dto";
+import {UpdateGalleryDto} from "./dto/gallery/update-gallery.dto";
 
 @ApiTags('users')
 @Controller('users')
@@ -58,16 +58,30 @@ export class UsersController {
   }
 
   // @UseGuards(JwtAuthGuard)
-  @Get('presigned-url')
-  @ApiOperation({ summary: 'Getting presigned url for file upload to Aws s3' })
-  async getPresignedUrl(@Query('fileName') fileName: string) {
-    if (!fileName) {
-      throw new BadRequestException('File name must be provided');
+  // @Get('presigned-url')
+  // @ApiOperation({ summary: 'Getting presigned url for file upload to Aws s3' })
+  // async getPresignedUrl(@Query('fileName') fileName: string) {
+  //   if (!fileName) {
+  //     throw new BadRequestException('File name must be provided');
+  //   }
+  //   const bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
+  //   const url = await this.s3Service.getPreSignedUrl(bucketName, fileName);
+  //   return { url };
+  // }
+
+  @Get('presigned-urls')
+  @ApiOperation({ summary: 'Getting presigned URLs for multiple file uploads to AWS S3' })
+  async getPresignedUrls(@Query('fileNames') fileNames: string[]) {
+    if (!fileNames || fileNames.length === 0) {
+      throw new BadRequestException('File names must be provided');
     }
     const bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
-    const url = await this.s3Service.getPreSignedUrl(bucketName, fileName);
-    return { url };
+    const urls = await Promise.all(
+        fileNames.map((fileName) => this.s3Service.getPreSignedUrl(bucketName, fileName))
+    );
+    return { urls };
   }
+
 
   // @UseGuards(JwtAuthGuard)
   @Get('registrations')
@@ -159,32 +173,31 @@ export class UsersController {
     return this.usersService.createIdentityDetail(createIdentityDetailDto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('change-threshold')
-  @ApiOperation({ summary: 'Changind threshold' })
-  async ChangeThreshold(
-    @Body('threshold') threshold: number
-  ): Promise<any> {
-    if (typeof threshold !== 'number' || threshold < 0) {
-      return { message: 'Invalid threshold value. Must be a non-negative number.' };
-    }
+  // @UseGuards(JwtAuthGuard)
+  // @Post('change-threshold')
+  // @ApiOperation({ summary: 'Changing threshold' })
+  // async ChangeThreshold(
+  //   @Body('threshold') threshold: number
+  // ): Promise<any> {
+  //   if (typeof threshold !== 'number' || threshold < 0) {
+  //     return { message: 'Invalid threshold value. Must be a non-negative number.' };
+  //   }
+  //   this.usersService.ChangeThreshold(threshold);
+  //   return { message: 'Threshold updated successfully.' };
+  // }
+  //
+  // @UseGuards(JwtAuthGuard)
+  // @Get('get-threshold')
+  // @ApiOperation({ summary: 'Get Threshold' })
+  // async GetThreshold(): Promise<any> {
+  //   return this.usersService.GetThreshold();
+  // }
 
-    this.usersService.ChangeThreshold(threshold);
-    return { message: 'Threshold updated successfully.' };
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('get-threshold')
-  @ApiOperation({ summary: 'Get Threshold' })
-  async GetThreshold(): Promise<any> {
-    return this.usersService.GetThreshold();
-  }
-
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get('identity-detail/list')
   @ApiOperation({ summary: 'Fetching list of brand/identity' })
-  async findAll(): Promise<IdentityDetail[]> {
-    return this.usersService.findAll();
+  async findAllIdentity(): Promise<IdentityDetail[]> {
+    return this.usersService.findAllIdentity();
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -350,50 +363,54 @@ async transferOwnership(
     return this.usersService.removeIdentityLocation(id);
   }
 
-
-
-
   // gallery logic =============================================================
 
   // @UseGuards(JwtAuthGuard)
-  @Post('user-cover-photos')
-  @ApiOperation({ summary: 'Creating user cover photos table' })
-  async createUserCoverPhoto(
-    @Body() createUserCoverPhotoDto: CreateUserCoverPhotoDto,
-  ): Promise<UserCoverPhoto> {
-    return this.usersService.createUserCoverPhoto(createUserCoverPhotoDto);
+  @Post('create/brand/gallery')
+  @ApiOperation({ summary: 'Creating brand gallery' })
+  async createBrandGallery(@Body() body: CreateBrandGalleryDto,): Promise<Gallery> {
+    return this.usersService.createBrandGallery(body);
   }
 
   // @UseGuards(JwtAuthGuard)
-  @Get('user-cover-photos')
-  @ApiOperation({ summary: 'Fetching list of all user cover photo' })
-  async findAllUserCoverPhoto(): Promise<UserCoverPhoto[]> {
-    return this.usersService.findAllUserCoverPhoto();
+  @Post('create/user/gallery')
+  @ApiOperation({ summary: 'Creating brand gallery' })
+  async createUserGallery(@Body() body: CreateUserGalleryDto,): Promise<Gallery> {
+    return this.usersService.createUserGallery(body);
   }
 
   // @UseGuards(JwtAuthGuard)
-  @Get('user-cover-photos/:id')
-  @ApiOperation({ summary: 'Fetching single user cover photo by id' })
-  async findOneUserCoverPhoto(
-    @Param('id') id: string,
-  ): Promise<UserCoverPhoto> {
-    return this.usersService.findOneUserCoverPhoto(id);
+  @Get('gallery/list')
+  @ApiOperation({ summary: 'Get gallery list' })
+  async findAllGallery(): Promise<Gallery[]> {
+    return this.usersService.findAllGallery();
   }
 
   // @UseGuards(JwtAuthGuard)
-  @Patch('user-cover-photos/:id')
-  @ApiOperation({ summary: 'Updating user cover photos' })
-  async updateUserCoverPhoto(
-    @Param('id') id: string,
-    @Body() updateUserCoverPhotoDto: UpdateUserCoverPhotoDto,
-  ): Promise<UserCoverPhoto> {
-    return this.usersService.updateUserCoverPhoto(id, updateUserCoverPhotoDto);
+  @Get('gallery/:id')
+  @ApiOperation({ summary: 'Get single gallery' })
+  async findOneGallery(@Param('id') id:string): Promise<Gallery> {
+    return this.usersService.findOneGallery(id);
   }
 
   // @UseGuards(JwtAuthGuard)
-  @Delete('user-cover-photos/:id')
+  @Put('addGalleryImage')
+  @ApiOperation({ summary: 'Update ' })
+  async addGalleryImage(@Body() body: UpdateGalleryDto,): Promise<Gallery> {
+    return this.usersService.addGalleryImage(body);
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Put('removeGalleryImage')
+  @ApiOperation({ summary: 'Update ' })
+  async removeGalleryImage(@Body() body: UpdateGalleryDto,): Promise<Gallery> {
+    return this.usersService.removeGalleryImage(body);
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Delete('gallery/remove/:id')
   @ApiOperation({ summary: 'Delete cover photo table from db' })
-  async removeUserCoverPhoto(@Param('id') id: string): Promise<void> {
-    return this.usersService.removeUserCoverPhoto(id);
+  async removeGallery(@Param('id') id: string): Promise<void> {
+    return this.usersService.removeGallery(id);
   }
 }

@@ -9,11 +9,10 @@ import {Registration} from '../users/entity/registration.entity';
 import {IdentityDetail} from '../users/entity/identity-detail.entity';
 import {ConfigModule, ConfigService} from '@nestjs/config';
 import {NotificationSetting} from "../notification/entities/notification-setting.entity";
-import {ReferralDetails} from "../referral/entities/referral.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Registration, IdentityDetail,NotificationSetting,ReferralDetails]),
+    TypeOrmModule.forFeature([Registration, IdentityDetail,NotificationSetting]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

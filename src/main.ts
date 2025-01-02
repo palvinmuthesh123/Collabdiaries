@@ -9,25 +9,10 @@ async function bootstrap() {
   dotenv.config();
   const app = await NestFactory.create(AppModule);
   // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     whitelist: true, // Strip properties that are not in the DTO
-  //     forbidNonWhitelisted: true, // Throw an error if non-whitelisted properties are present
-  //     transform: true, // Automatically transform payloads to DTO instances
-  //     exceptionFactory: (errors) => {
-  //       const formattedErrors = errors.map((err) => ({
-  //         field: err.property,
-  //         errors: Object.values(err.constraints || {}),
-  //       }));
-  //       return new BadRequestException({
-  //         success: 0,
-  //         statusCode: 400,
-  //         message: 'Validation Failed',
-  //         errors: formattedErrors,
-  //       });
-  //     },
-  //   }),
+  //     new ValidationPipe({
+  //       transform: true, // Automatically transform payloads
+  //     }),
   // );
-
   // Create Swagger options
   const options = new DocumentBuilder()
     .setTitle('COLLABDIARY USER API')

@@ -74,24 +74,15 @@ export class SettingService {
     await this.identityBlockRepository.remove(block);
   }
 
-  // Check if a user is blocked
-  async isBlocked(blockerId: string, blockedId: string): Promise<boolean> {
-    const block = await this.identityBlockRepository.findOne({
-      where: { blocker_id: blockerId, blocked_id: blockedId },
-    });
-    return !!block;
-
-  }
-
   // Fetch all blocked users for a given blocker
   async getBlockedUsers(blockerId: string): Promise<IdentityBlock[]> {
     return this.identityBlockRepository.find({
       where: { blocker_id: blockerId },
-      relations: ['blocked'], // Ensure related data is fetched if needed
+      relations: ['blocked'],
     });
   }
 
-  // Report logic
+  // Report logic ====================================================
 
   async create(createDto: CreateReportDetailsDto): Promise<ReportDetails> {
     const report = this.reportDetailsRepository.create(createDto);
@@ -99,7 +90,7 @@ export class SettingService {
   }
 
   async findAll(): Promise<ReportDetails[]> {
-    return this.reportDetailsRepository.find({ relations: ['reporter', 'reported'] });
+    return this.reportDetailsRepository.find();
   }
 
   async findOne(id: string): Promise<ReportDetails> {
@@ -113,8 +104,8 @@ export class SettingService {
     return report;
   }
 
-  async update(id: string, updateDto: UpdateReportDetailsDto): Promise<ReportDetails> {
-    const report = await this.findOne(id);
+  async updateReportStatus(id: string, updateDto: UpdateReportDetailsDto): Promise<ReportDetails> {
+    const report = await this.reportDetailsRepository.findOne({where:{report_id:id}})
     Object.assign(report, updateDto);
     return this.reportDetailsRepository.save(report);
   }

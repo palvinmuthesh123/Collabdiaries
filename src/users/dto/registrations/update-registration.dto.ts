@@ -13,6 +13,11 @@ export class UpdateRegistrationsDto {
   @IsString()
   user_name?: string;
 
+  @ApiProperty({ description: 'Username of the user' })
+  @IsOptional()
+  @IsString()
+  full_name?: string;
+
   @ApiProperty({ description: 'Email of the user' })
   @IsOptional()
   @IsEmail({}, { message: 'Email must be a valid email address' })

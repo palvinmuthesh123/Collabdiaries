@@ -22,6 +22,7 @@ export class NotificationService {
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
     const {identity_id, type, message } = createNotificationDto;
+    if (!identity_id) throw new BadRequestException('identity_id is must b required')
     // Fetch notification settings for the user
     const settings = await this.notificationSettingRepository.findOne({
       where: { identity_id:identity_id },
@@ -68,12 +69,14 @@ export class NotificationService {
     });
   }
 
-  async findAll(identity_id: string): Promise<Notification[]> {
+  async notificationList(identity_id?: string): Promise<Notification[]> {
+    const whereCondition = identity_id ? { identity_id } : {};
     return this.notificationRepository.find({
-      where: { identity_id },
+      where: whereCondition,
       order: { created_date: 'DESC' },
     });
   }
+
 
   async findOne(id: string): Promise<Notification> {
     const notification = await this.notificationRepository.findOne({
@@ -96,6 +99,10 @@ export class NotificationService {
   async createSetting(payload:CreateNotificationSettingDto){
     const setting = this.notificationRepository.create(payload)
     return this.notificationSettingRepository.save(setting)
+  }
+
+  async findAllNotificationSetting():Promise<NotificationSetting[]>{
+    return this.notificationSettingRepository.find()
   }
 
   async findOneNotificationSetting(notification_setting_id:string):Promise<NotificationSetting>{
@@ -122,13 +129,13 @@ export class NotificationService {
       throw new BadRequestException('This user has paused all notifications');
     }
     switch (type) {
-      case NotificationType.NEARBY_INFLUENCERS:
+      case NotificationType.nearby_influencers:
         return settings.nearby_influencers_passings;
-      case NotificationType.NEARBY_BRANDS:
+      case NotificationType.nearby_brands:
         return settings.nearby_brands_passings;
-      case NotificationType.UNKNOWN_MESSAGES:
+      case NotificationType.unknown_messages:
         return settings.messages_request;
-      case NotificationType.MESSAGES:
+      case NotificationType.messages:
         return settings.messages_from_users;
       default: return true; // Allow creating notifications for other types by default
     }

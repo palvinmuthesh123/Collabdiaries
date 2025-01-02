@@ -1,4 +1,4 @@
-import {IsEnum, IsOptional, IsString, IsUUID} from 'class-validator';
+import {IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID} from 'class-validator';
 import {ReportType} from '../../common/enum';
 
 export class CreateReportDetailsDto {
@@ -12,8 +12,8 @@ export class CreateReportDetailsDto {
     type: ReportType;
 
     @IsString()
-    @IsOptional()
-    reason?: string;
+    @IsNotEmpty()
+    reason: string;
 
     @IsOptional()
     @IsString()

@@ -1,19 +1,14 @@
-import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn,} from 'typeorm';
+import {Column, Entity, PrimaryGeneratedColumn,} from 'typeorm';
+import {BaseCommonEntity} from "../common/base.entity";
 
 @Entity('perks')
-export class Perks {
+export class Perks extends BaseCommonEntity {
   @PrimaryGeneratedColumn('uuid')
-  perks_id: string;
-
-  @Column({ type: 'char', nullable:true })
-  perks_name: string;
+  perk_id: string;
 
   @Column({ type: 'text' })
-  perks_desc: string;
+  name: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_date: Date;
-
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updated_date: Date;
+  @Column({ type: 'text',nullable:true })
+  desc: string;
 }

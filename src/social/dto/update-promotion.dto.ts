@@ -1,5 +1,5 @@
-import {IsOptional, IsUUID, IsString, IsNumber, IsEnum} from 'class-validator';
-import {LinkType} from "../../common/enum";
+import {IsBoolean, IsEnum, IsNumber, IsOptional, IsString, IsUUID} from 'class-validator';
+import {LinkType, PromotionType} from "../../common/enum";
 
 export class UpdatePromotionDto {
   @IsOptional()
@@ -8,11 +8,7 @@ export class UpdatePromotionDto {
 
   @IsOptional()
   @IsString()
-  label_name?: string;
-
-  @IsOptional()
-  @IsString()
-  link?: string;
+  label?: string;
 
   @IsOptional()
   @IsString()
@@ -20,22 +16,25 @@ export class UpdatePromotionDto {
 
   @IsOptional()
   @IsString()
-  image_detail?: string;
+  logo_details?: string;
 
   @IsOptional()
   @IsString()
-  type?: string;
+  cover_image?: string;
 
   @IsOptional()
-  @IsString()
+  @IsEnum(PromotionType)
+  type?: PromotionType;
+
+  @IsOptional()
   @IsEnum(LinkType)
-  link_type: LinkType;
-
-  @IsOptional()
-  @IsString()
-  type_id?: string;
+  link_type?: LinkType;
 
   @IsOptional()
   @IsNumber()
   priority?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isBanner?: boolean;
 }

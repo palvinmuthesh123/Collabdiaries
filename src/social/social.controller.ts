@@ -1,38 +1,30 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Put,
-  Param,
-  Get,
-  Delete,
-  Query,
-  Res,
-} from '@nestjs/common';
-import { SocialService } from './social.service';
-import { Response } from 'express';
-import { CreateCollabFollowingDetailDto } from './dto/create-collab-following.dto';
-import { UpdateCollabFollowingDetailDto } from './dto/update-collab-following.dto';
-import { CreateCollabIdentityCountDto } from './dto/create-collab-identitycount.dto';
-import { UpdateCollabIdentityCountDto } from './dto/update-collab-identitycount.dto';
-import { CreatePromotionDto } from './dto/create-promotion.dto';
-import { UpdatePromotionDto } from './dto/update-promotion.dto';
-import { CreateSocialCommentDto } from './dto/create-social-comment.dto';
-import { UpdateSocialCommentDto } from './dto/update-social-comment.dto';
-import { CreateSocialIdentityCountDto } from './dto/create-social-identity-count.dto';
-import { UpdateSocialIdentityCountDto } from './dto/update-social-identity-count.dto';
-import { CreateSocialLikeDto } from './dto/create-social-like.dto';
-import { UpdateSocialLikeDto } from './dto/update-social-like.dto';
-import { CreateSocialPostDto } from './dto/create-social-post.dto';
-import { UpdateSocialPostDto } from './dto/update-social-post.dto';
+import {Body, Controller, Delete, Get, Param, Post, Put, Query, Res,} from '@nestjs/common';
+import {SocialService} from './social.service';
+import {Response} from 'express';
+import {CreateCollabFollowingDetailDto} from './dto/create-collab-following.dto';
+import {UpdateCollabFollowingDetailDto} from './dto/update-collab-following.dto';
+import {CreateCollabIdentityCountDto} from './dto/create-collab-identitycount.dto';
+import {UpdateCollabIdentityCountDto} from './dto/update-collab-identitycount.dto';
+import {CreatePromotionDto} from './dto/create-promotion.dto';
+import {UpdatePromotionDto} from './dto/update-promotion.dto';
+import {CreateSocialCommentDto} from './dto/create-social-comment.dto';
+import {UpdateSocialCommentDto} from './dto/update-social-comment.dto';
+import {CreateSocialIdentityCountDto} from './dto/create-social-identity-count.dto';
+import {UpdateSocialIdentityCountDto} from './dto/update-social-identity-count.dto';
+import {CreateSocialLikeDto} from './dto/create-social-like.dto';
+import {UpdateSocialLikeDto} from './dto/update-social-like.dto';
+import {CreateSocialPostDto} from './dto/create-social-post.dto';
+import {UpdateSocialPostDto} from './dto/update-social-post.dto';
 
-import { CollabFollowingDetail } from './entity/collab-following-detail.entity';
-import { CollabIdentityCount } from './entity/collab-identity-count.entity';
-import { SocialComment } from './entity/social-comment.entity';
-import { Promotion } from './entity/promotion.entity';
-import { SocialIdentityCount } from './entity/social-identity-count.entity';
-import { SocialLike } from './entity/social-like.entity';
-import { SocialPost } from './entity/social-post.entity';
+import {CollabFollowingDetail} from './entity/collab-following-detail.entity';
+import {CollabIdentityCount} from './entity/collab-identity-count.entity';
+import {SocialComment} from './entity/social-comment.entity';
+import {Promotion} from './entity/promotion.entity';
+import {SocialIdentityCount} from './entity/social-identity-count.entity';
+import {SocialLike} from './entity/social-like.entity';
+import {SocialPost} from './entity/social-post.entity';
+import {LinkType} from "../common/enum";
+import {FindAllPromotionDto} from "./dto/findAllPromotion.dto";
 
 @Controller('social')
 export class SocialController {
@@ -111,25 +103,17 @@ export class SocialController {
     return this.socialService.removeCollabIdentityCount(id);
   }
 
-  //Promotion
-  @Post('promotion')
+  //Promotion ==============================================================
+  @Post('promotion/create')
   async createPromotion(
     @Body() createDto: CreatePromotionDto,
   ): Promise<Promotion> {
     return this.socialService.createPromotion(createDto);
   }
 
-  @Put('promotion/:id')
-  async updatePromotion(
-    @Param('id') id: string,
-    @Body() updateDto: UpdatePromotionDto,
-  ): Promise<Promotion> {
-    return this.socialService.updatePromotion(id, updateDto);
-  }
-
-  @Get('promotion')
-  async findAllPromotion(): Promise<Promotion[]> {
-    return this.socialService.findAllPromotion();
+  @Get('promotion/list')
+  async findAllPromotion(@Body() body:FindAllPromotionDto): Promise<Promotion[]> {
+    return this.socialService.findAllPromotion(body);
   }
 
   @Get('promotion/:id')
@@ -137,7 +121,20 @@ export class SocialController {
     return this.socialService.findOnePromotion(id);
   }
 
-  @Delete('promotion/:id')
+  @Get('promotion/with/identityId')
+  async promotionsWithIdentityId(@Body() body:{identity_id:string,link_type?:LinkType}): Promise<Promotion[]> {
+    return this.socialService.promotionsWithIdentityId(body.identity_id,body.link_type);
+  }
+
+  @Put('promotion/update/:id')
+  async updatePromotion(
+    @Param('id') id: string,
+    @Body() updateDto: UpdatePromotionDto,
+  ): Promise<Promotion> {
+    return this.socialService.updatePromotion(id, updateDto);
+  }
+
+  @Delete('promotion/delete/:id')
   async removePromotion(@Param('id') id: string): Promise<void> {
     return this.socialService.removePromotion(id);
   }

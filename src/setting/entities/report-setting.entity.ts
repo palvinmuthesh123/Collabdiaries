@@ -21,7 +21,7 @@ export class ReportDetails extends BaseCommonEntity{
     reason: string;
 
     @Column({ type: 'text', nullable: true })
-    details?: string;
+    desc?: string;
 
     @Column({ type: 'enum', enum: ReportStatus, default: ReportStatus.Pending })
     status: ReportStatus;
