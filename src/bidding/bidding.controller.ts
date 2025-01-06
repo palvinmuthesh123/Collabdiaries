@@ -25,9 +25,10 @@ export class BidController {
 
   @UseGuards(JwtAuthGuard)
   @Post('/createBid')
-  async createBid(@Body() createBidDto: CreateBidDto): Promise<any> {
-    await this.bidService.createBid(createBidDto);
-    return { message: 'Bid is being processed' };
+  async createBid(@Body() createBidDto: CreateBidDto): Promise<Bid> {
+    // await this.bidService.createBid(createBidDto);
+    // return { message: 'Bid is being processed' };
+    return this.bidService.createBid(createBidDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -55,6 +56,12 @@ export class BidController {
   @Get('userBids/:id')
   async findUserBid(@Param('id') id: string): Promise<Bid[]> {
     return this.bidService.findUserBid(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('userBids/:id')
+  async findUserGigs(@Param('id') id: string): Promise<Bid[]> {
+    return this.bidService.findUserGigs(id);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -29,9 +29,6 @@ export class Bid {
   @Column({ type: 'uuid' })
   bidToUserId: string;
 
-  // @Column({ type: 'varchar', array: true })
-  // dealType: string[];
-
   @Column({ type: 'enum', enum: DealType, nullable: true, array: true })
   dealType: DealType;
 
@@ -57,11 +54,11 @@ export class Bid {
   @OneToMany(() => Negotiation, (negotiation) => negotiation.bid)
   negotiation: Negotiation[];
 
-  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid1)
+  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid, { eager: false })
   @JoinColumn({ name: 'bidByUserId' })
   identityDetail: IdentityDetail;
 
-  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid)
+  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid1, { eager: false })
   @JoinColumn({ name: 'bidToUserId' })
   identityDetail1: IdentityDetail;
 }

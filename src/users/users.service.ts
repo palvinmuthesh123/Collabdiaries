@@ -51,14 +51,19 @@ export class UsersService {
     return registerUser;
   }
 
-  async verifyUsername(inputData:VerifyUsernameDto):Promise<{msg:string}>{
-    if (inputData.user_type === UserType.CollabUser){
-      const getUsername = await this.registrationRepository.findOne({where:{user_name:inputData.user_type}});
-      return {msg:'user_name is already exist'}
+  async verifyUsername(inputData: VerifyUsernameDto): Promise<boolean> {
+    if (inputData.user_type === UserType.CollabUser) {
+      const getUsername = await this.registrationRepository.findOne({
+        where: { user_name: inputData.username },
+      });
+      return !!getUsername; // Returns true if username exists, otherwise false
     }
-    const getBrandUsername = await this.identityDetailRepository.findOne({where:{user_name:inputData.user_type}});
-    return {msg:'user_name is already exist'}
+    const getBrandUsername = await this.identityDetailRepository.findOne({
+      where: { user_name: inputData.username },
+    });
+    return !!getBrandUsername; // Returns true if username exists, otherwise false
   }
+
 
   async findAllRegistration(search: string): Promise<Registration[]> {
     const queryBuilder = this.registrationRepository.createQueryBuilder('registration');

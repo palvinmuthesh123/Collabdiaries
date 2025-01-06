@@ -9,6 +9,7 @@ import { Negotiation } from './entity/bid-negotiation.entity';
 import { CreateNegotiationDto } from './dto/create-negotiation.dto';
 import { UpdateNegotiationDto } from './dto/update-negotiation.dto';
 import { BidStatus } from 'src/common/enum';
+import { IdentityDetail } from 'src/users/entity/identity-detail.entity';
 
 @Injectable()
 export class BidService {
@@ -17,21 +18,38 @@ export class BidService {
     private readonly bidRepository: Repository<Bid>,
     @InjectRepository(Negotiation)
     private readonly negotiationRepository: Repository<Negotiation>,
+    @InjectRepository(IdentityDetail)
+    private readonly identityDetailRepository: Repository<IdentityDetail>,
     private readonly jobQueueService: JobQueueService
   ) {}
 
   //Bid
-  async createBid(createBidDto: CreateBidDto): Promise<void> {
-    // const bid = this.bidRepository.create(createBidDto);
-    // return await this.bidRepository.save(bid);
+  async createBid(createBidDto: CreateBidDto): Promise<Bid> {
     // await this.bidQueue.add(createBidDto, {
     //   attempts: 3, // Retry up to 3 times on failure
     //   backoff: 5000, // Wait 5 seconds between retries
     // });
-    this.jobQueueService.addJob(createBidDto);
+    // this.jobQueueService.addJob(createBidDto);
+    // Check if bidByUserId exists
+    const bidByUser = await this.identityDetailRepository.findOne({
+      where: { identity_id: createBidDto.bidByUserId },
+    });
+    if (!bidByUser) {
+      throw new NotFoundException(`Identity with ID ${createBidDto.bidByUserId} not found`);
+    }
+
+    const bidToUser = await this.identityDetailRepository.findOne({
+      where: { identity_id: createBidDto.bidToUserId },
+    });
+    if (!bidToUser) {
+      throw new NotFoundException(`Identity with ID ${createBidDto.bidToUserId} not found`);
+    }
+
+    const bid = this.bidRepository.create(createBidDto);
+    return await this.bidRepository.save(bid);
   }
 
-  async findAllBid(): Promise<Bid[]> {
+    async findAllBid(): Promise<Bid[]> {
     return await this.bidRepository.find();
   }
 
@@ -56,6 +74,20 @@ export class BidService {
     const bid = await this.bidRepository.findOne({ where: { bid_id } });
     if (!bid) {
       throw new NotFoundException(`Bid with ID ${bid_id} not found`);
+    }
+    return bid;
+  }
+
+  async findUserGigs(bidByUserId: string): Promise<Bid[]> {
+    const bid = await this.bidRepository.find({
+      where: { 
+        bidByUserId,
+        requestStatus: BidStatus.accepted,
+      },
+      relations: ['negotiation', 'identityDetail', 'identityDetail1'],
+    });
+    if (!bid) {
+      throw new NotFoundException(`Bid with ID ${bidByUserId} not found`);
     }
     return bid;
   }

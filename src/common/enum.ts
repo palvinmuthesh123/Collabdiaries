@@ -92,3 +92,8 @@ export enum PromotionType {
   coupon_code='coupon_code',
   app_opener ='app_opener'
 }
+
+export enum MemberType {
+  crew = 'crew',
+  collaborator = 'collaborator',
+}

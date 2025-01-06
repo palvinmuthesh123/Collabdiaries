@@ -7,8 +7,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-
-import { Bid } from './bid.entity';
+import { Bid, DealType } from './bid.entity';
+import { BidStatus } from 'src/common/enum';
 
 @Entity('negotiation')
 export class Negotiation {
@@ -24,6 +24,9 @@ export class Negotiation {
   @Column({ type: 'uuid' })
   negoToUserId: string;
 
+  // @Column({ type: 'enum', enum: DealType, array: true })
+  // dealType: DealType[];
+
   @Column({ type: 'varchar', array: true })
   dealType: string[];
 
@@ -36,8 +39,8 @@ export class Negotiation {
   @Column({ type: 'varchar', array: true })
   perks: string[];
 
-  @Column({ type: 'text' })
-  requestStatus: string;
+  @Column({ type: 'enum', enum: BidStatus, default: BidStatus.received })
+  requestStatus: BidStatus;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_date: Date;

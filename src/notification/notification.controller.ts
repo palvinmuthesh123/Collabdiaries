@@ -14,7 +14,6 @@ export class NotificationController {
   @ApiOperation({ summary: 'Creating notification' })
   @Post('create')
   async createNotification(@Body() createNotificationDto: CreateNotificationDto) {
-    console.log(createNotificationDto,'xxx')
     return this.notificationService.createNotification(createNotificationDto);
   }
 

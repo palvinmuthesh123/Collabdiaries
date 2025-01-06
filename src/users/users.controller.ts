@@ -53,7 +53,7 @@ export class UsersController {
   // @UseGuards(JwtAuthGuard)
   @Get('registration/verifyUsername')
   @ApiOperation({ summary: 'verify username of user' })
-  async verifyUsername(@Body() body:VerifyUsernameDto):Promise<{msg:string}> {
+  async verifyUsername(@Body() body:VerifyUsernameDto):Promise<boolean> {
    return  this.usersService.verifyUsername(body);
   }
 
@@ -71,13 +71,13 @@ export class UsersController {
 
   @Get('presigned-urls')
   @ApiOperation({ summary: 'Getting presigned URLs for multiple file uploads to AWS S3' })
-  async getPresignedUrls(@Query('fileNames') fileNames: string[]) {
-    if (!fileNames || fileNames.length === 0) {
+  async getPresignedUrls(@Body() body:{fileNames: string[]}) {
+    if (!body.fileNames || body.fileNames.length === 0) {
       throw new BadRequestException('File names must be provided');
     }
     const bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
     const urls = await Promise.all(
-        fileNames.map((fileName) => this.s3Service.getPreSignedUrl(bucketName, fileName))
+        body.fileNames.map((fileName) => this.s3Service.getPreSignedUrl(bucketName, fileName))
     );
     return { urls };
   }

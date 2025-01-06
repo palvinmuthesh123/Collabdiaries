@@ -7,10 +7,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Bid } from './entity/bid.entity';
 import { Negotiation } from './entity/bid-negotiation.entity';
 import { JobQueueService } from './job-queue.service';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Bid, Negotiation]),
+    UsersModule
     // BullModule.registerQueue({
     //   name: 'bidQueue',
     // }),

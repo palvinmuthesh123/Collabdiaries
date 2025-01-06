@@ -14,11 +14,19 @@ import {Gallery} from "./entity/gallery.entity";
       Registration,
       IdentityLocation,
       IdentityDetail,
-        Gallery,
+      Gallery,
     ]),
   ],
   providers: [UsersService, S3Service],
   controllers: [UsersController],
-  exports: [UsersService],
+  exports: [
+    UsersService,
+    TypeOrmModule.forFeature([
+      Registration,
+      IdentityLocation,
+      IdentityDetail,
+      Gallery,
+    ]),
+  ],
 })
 export class UsersModule {}

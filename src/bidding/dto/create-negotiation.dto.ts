@@ -4,7 +4,9 @@ import {
   IsUUID,
   IsArray,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
+import { BidStatus, DealType } from 'src/common/enum';
 
 export class CreateNegotiationDto {
   @IsNotEmpty()
@@ -21,7 +23,8 @@ export class CreateNegotiationDto {
 
   @IsNotEmpty()
   @IsArray()
-  @IsString({ each: true })
+  // @IsEnum(DealType, { each: true })
+  // dealType: DealType[];
   dealType: string[];
 
   @IsNotEmpty()
@@ -38,5 +41,5 @@ export class CreateNegotiationDto {
 
   @IsNotEmpty()
   @IsString()
-  requestStatus: string;
+  requestStatus: BidStatus;
 }

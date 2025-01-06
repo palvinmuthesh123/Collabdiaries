@@ -23,6 +23,7 @@ import {NotificationSetting} from "../notification/entities/notification-setting
 import {IdentityBlock} from "../setting/entities/user-block-setting.entity";
 import {ReportDetails} from "../setting/entities/report-setting.entity";
 import {Gallery} from "../users/entity/gallery.entity";
+import {Group} from "../group/entity/group.entity";
 
 @Module({
   imports: [
@@ -59,7 +60,8 @@ import {Gallery} from "../users/entity/gallery.entity";
         NotificationSetting,
         IdentityBlock,
         ReportDetails,
-          Gallery,
+        Gallery,
+        Group
       ],
       logging: false, // Enable logging to check synchronization queries
       ssl: {
