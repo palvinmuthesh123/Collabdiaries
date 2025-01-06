@@ -17,6 +17,7 @@ import { GroupModule } from './group/group.module';
 // import { ProductModule } from './product/product.module';
 // import { MemberModule } from './member/member.module';
 // import { PageModule } from './page/page.module';
+import { InstagramModule } from './instagram/instagram.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { GroupModule } from './group/group.module';
     // ProductModule,
     // MemberModule,
     // PageModule,
+    InstagramModule,
   ],
 })
 export class AppModule {}

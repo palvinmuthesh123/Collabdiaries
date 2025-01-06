@@ -24,6 +24,7 @@ import {IdentityBlock} from "../setting/entities/user-block-setting.entity";
 import {ReportDetails} from "../setting/entities/report-setting.entity";
 import {Gallery} from "../users/entity/gallery.entity";
 import {Group} from "../group/entity/group.entity";
+import { InstagramToken } from '../instagram/entities/instagram.entity';
 
 @Module({
   imports: [
@@ -61,7 +62,8 @@ import {Group} from "../group/entity/group.entity";
         IdentityBlock,
         ReportDetails,
         Gallery,
-        Group
+        Group,
+        InstagramToken,
       ],
       logging: false, // Enable logging to check synchronization queries
       ssl: {
