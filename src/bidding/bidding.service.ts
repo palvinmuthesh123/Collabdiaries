@@ -53,18 +53,31 @@ export class BidService {
     return await this.bidRepository.find();
   }
 
-  async findAllBidByFilter(statuses?: BidStatus[], dealTypes?: DealType[]): Promise<Bid[]> {
+  async findAllBidByFilter(statusesOrDealTypes?: string[]): Promise<Bid[]> {
     const query = this.bidRepository.createQueryBuilder('bid');
-    
-    if (statuses && statuses.length > 0) {
-      query.andWhere('bid.requestStatus IN (:...statuses)', { statuses });
-    }
+  
+    if (statusesOrDealTypes && statusesOrDealTypes.length > 0) {
 
-    if (dealTypes && dealTypes.length > 0) {
-      query.andWhere(
-        `(SELECT COUNT(dealType) FROM UNNEST(bid.dealType) dealType WHERE dealType = ANY(:dealTypes)) > 0`,
-        { dealTypes }
+      const bidStatuses = Object.values(BidStatus);
+      const dealTypes = Object.values(DealType);
+  
+      const filteredStatuses = statusesOrDealTypes.filter((item) =>
+        bidStatuses.includes(item as BidStatus)
       );
+      const filteredDealTypes = statusesOrDealTypes.filter((item) =>
+        dealTypes.includes(item as DealType)
+      );
+  
+      if (filteredStatuses.length > 0) {
+        query.andWhere('bid.requestStatus IN (:...filteredStatuses)', { filteredStatuses });
+      }
+  
+      if (filteredDealTypes.length > 0) {
+        query.andWhere(
+          `(SELECT COUNT(dealType) FROM UNNEST(bid.dealType) dealType WHERE dealType = ANY(:filteredDealTypes)) > 0`,
+          { filteredDealTypes }
+        );
+      }
     }
   
     return await query.getMany();

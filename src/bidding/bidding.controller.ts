@@ -40,10 +40,9 @@ export class BidController {
   @UseGuards(JwtAuthGuard)
   @Post('/filter')
   async findAllBidByFilter(
-    @Body('statuses') statuses?: BidStatus[],
-    @Body('dealTypes') dealTypes?: DealType[],
+    @Body('filters') filters?: string[],
   ): Promise<Bid[]> {
-    return this.bidService.findAllBidByFilter(statuses, dealTypes);
+    return this.bidService.findAllBidByFilter(filters);
   }
 
   @UseGuards(JwtAuthGuard)
