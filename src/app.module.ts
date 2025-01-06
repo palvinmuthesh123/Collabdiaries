@@ -12,11 +12,11 @@ import {SocialModule} from './social/social.module';
 import {NotificationModule} from './notification/notification.module';
 import {SettingModule} from './setting/setting.module';
 import { GroupModule } from './group/group.module';
-import { DiaryModule } from './diary/diary.module';
-import { PostModule } from './post/post.module';
-import { ProductModule } from './product/product.module';
-import { MemberModule } from './member/member.module';
-import { PageModule } from './page/page.module';
+// import { DiaryModule } from './diary/diary.module';
+// import { PostModule } from './post/post.module';
+// import { ProductModule } from './product/product.module';
+// import { MemberModule } from './member/member.module';
+// import { PageModule } from './page/page.module';
 
 @Module({
   imports: [
@@ -33,11 +33,11 @@ import { PageModule } from './page/page.module';
     NotificationModule,
     SettingModule,
     GroupModule,
-    DiaryModule,
-    PostModule,
-    ProductModule,
-    MemberModule,
-    PageModule,
+    // DiaryModule,
+    // PostModule,
+    // ProductModule,
+    // MemberModule,
+    // PageModule,
   ],
 })
 export class AppModule {}
