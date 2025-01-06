@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -35,13 +36,19 @@ export class InstagramService {
     expirationTime.setSeconds(expirationTime.getSeconds() + expiresIn);
     await this.saveToken(expirationTime, longLivedToken, userId);
     return {
-      longLivedToken,
+      userId,
     };
   }
 
   // Fetch User Data (User and Media)
-  async getUserData(accessToken: string): Promise<any> {
-    const userUrl = `https://graph.instagram.com/me?fields=id,username,account_type,followers_count,follows_count,media_count&access_token=${accessToken}`;
+  async getUserData(userId: string): Promise<any> {
+    const instagramUserDetails = await this.instagramTokenRepository.findOne({
+      where: { userId },
+    });
+    if (!instagramUserDetails)
+      throw new NotFoundException('this user not exist firstly login');
+    const accessToken = instagramUserDetails.accessToken;
+    const userUrl = `https://graph.instagram.com/me?fields=id,username,name,account_type,followers_count,follows_count,media_count&access_token=${accessToken}`;
     const mediaUrl = `https://graph.instagram.com/me/media?fields=id,media_type,media_url,permalink,timestamp,like_count,comments_count&access_token=${accessToken}`;
     try {
       const [userResponse, mediaResponse] = await Promise.all([

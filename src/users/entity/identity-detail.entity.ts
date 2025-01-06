@@ -1,23 +1,34 @@
-import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn,} from 'typeorm';
-import {Bid} from '../../bidding/entity/bid.entity';
-import {SocialIdentityCount} from '../../social/entity/social-identity-count.entity';
-import {CollabIdentityCount} from '../../social/entity/collab-identity-count.entity';
-import {CollabFollowingDetail} from '../../social/entity/collab-following-detail.entity';
-import {SocialPost} from '../../social/entity/social-post.entity';
-import {SocialLike} from '../../social/entity/social-like.entity';
-import {SocialComment} from '../../social/entity/social-comment.entity';
-import {Promotion} from '../../social/entity/promotion.entity';
-import {Registration} from "./registration.entity";
-import {IdentityLocation} from "./location.entity";
-import {Gallery} from "./gallery.entity";
-import {UserStatus, UserType} from "../../common/enum";
-import {NotificationSetting} from "../../notification/entities/notification-setting.entity";
-import {IdentityBlock} from "../../setting/entities/user-block-setting.entity";
-import {ReportDetails} from "../../setting/entities/report-setting.entity";
-import {BaseCommonEntity} from "../../common/base.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Bid } from '../../bidding/entity/bid.entity';
+import { SocialIdentityCount } from '../../social/entity/social-identity-count.entity';
+import { CollabIdentityCount } from '../../social/entity/collab-identity-count.entity';
+import { CollabFollowingDetail } from '../../social/entity/collab-following-detail.entity';
+import { SocialPost } from '../../social/entity/social-post.entity';
+import { SocialLike } from '../../social/entity/social-like.entity';
+import { SocialComment } from '../../social/entity/social-comment.entity';
+import { Promotion } from '../../social/entity/promotion.entity';
+import { Registration } from './registration.entity';
+import { IdentityLocation } from './location.entity';
+import { Gallery } from './gallery.entity';
+import { UserStatus, UserType } from '../../common/enum';
+import { NotificationSetting } from '../../notification/entities/notification-setting.entity';
+import { IdentityBlock } from '../../setting/entities/user-block-setting.entity';
+import { ReportDetails } from '../../setting/entities/report-setting.entity';
+import { BaseCommonEntity } from '../../common/base.entity';
+import { Category } from '../../category/category.entity';
 
 @Entity('identitydetail')
-export class IdentityDetail extends BaseCommonEntity{
+export class IdentityDetail extends BaseCommonEntity {
   @PrimaryGeneratedColumn('uuid')
   identity_id: string;
 
@@ -30,11 +41,11 @@ export class IdentityDetail extends BaseCommonEntity{
   @Column({ length: 100, nullable: true })
   brand_name: string;
 
-  @Column({ length: 100, nullable: true,unique:true })
+  @Column({ length: 100, nullable: true, unique: true })
   user_name: string;
 
-  @Column({ type: 'text',array:true,nullable:true})
-  deal_type: string[]
+  @Column({ type: 'text', array: true, nullable: true })
+  deal_type: string[];
 
   @Column('uuid', { array: true, nullable: true })
   perks: string[];
@@ -51,7 +62,7 @@ export class IdentityDetail extends BaseCommonEntity{
   @Column({ length: 255, nullable: true })
   profile_image: string;
 
-  @Column({type: 'json', nullable: true,})
+  @Column({ type: 'json', nullable: true })
   cover_image_details: {
     main_cover_image: string;
     cover_images: string[];
@@ -69,9 +80,9 @@ export class IdentityDetail extends BaseCommonEntity{
   @Column({ length: 100, nullable: true })
   tag_name: string;
 
-  @Column({ length: 100, nullable: true,default:null })
+  @Column({ length: 100, nullable: true, default: null })
   referral_by_code: string;
-//TODO => ISKO NULLABEL FALSE KRNA H
+  //TODO => ISKO NULLABEL FALSE KRNA H
   @Column({ type: 'varchar', nullable: true })
   qr_code_link?: string;
 
@@ -80,7 +91,11 @@ export class IdentityDetail extends BaseCommonEntity{
 
   // Relationships
 
-  @ManyToOne(() => Registration, (registration) => registration.identityDetails, { nullable: true },)
+  @ManyToOne(
+    () => Registration,
+    (registration) => registration.identityDetails,
+    { nullable: true },
+  )
   @JoinColumn({ name: 'registration_id' })
   registration: Registration;
 
@@ -90,21 +105,31 @@ export class IdentityDetail extends BaseCommonEntity{
   @OneToMany(() => Bid, (bid1) => bid1.identityDetail1)
   bid1: Bid[];
 
-  @OneToMany(() => SocialComment, (socialComment) => socialComment.identityDetail,)
+  @OneToMany(
+    () => SocialComment,
+    (socialComment) => socialComment.identityDetail,
+  )
   socialComment: SocialComment[];
 
   @OneToMany(() => Promotion, (promotion) => promotion.identityDetail)
   promotions: Promotion[];
 
-  @OneToMany(() => Gallery, (brandGallery) => brandGallery.identityDetail,)
+  @OneToMany(() => Gallery, (brandGallery) => brandGallery.identityDetail)
   brandGalleries: Gallery[];
 
-  @OneToMany(() => IdentityLocation, (identitylocation) => identitylocation.identity_detail,)
+  @OneToMany(
+    () => IdentityLocation,
+    (identitylocation) => identitylocation.identity_detail,
+  )
   identitylocation: IdentityLocation[];
 
-  @OneToOne(() => NotificationSetting, (notificationSetting) => notificationSetting.identity, {
-    cascade: true,
-  })
+  @OneToOne(
+    () => NotificationSetting,
+    (notificationSetting) => notificationSetting.identity,
+    {
+      cascade: true,
+    },
+  )
   notificationSetting: NotificationSetting;
 
   @OneToMany(() => IdentityBlock, (block) => block.blocker)
@@ -119,31 +144,33 @@ export class IdentityDetail extends BaseCommonEntity{
   @OneToMany(() => ReportDetails, (block) => block.reported)
   reportingAccounts: ReportDetails[];
 
+  @ManyToMany(() => Category)
+  @JoinTable()
+  categories: Category[];
+
   //======================================
 
-
-
   @OneToMany(
-      () => SocialIdentityCount,
-      (socialIdentityCount) => socialIdentityCount.identityDetail,
+    () => SocialIdentityCount,
+    (socialIdentityCount) => socialIdentityCount.identityDetail,
   )
   socialIdentityCount: SocialIdentityCount[];
 
   @OneToMany(
-      () => CollabIdentityCount,
-      (collabIdentityCount) => collabIdentityCount.identityDetail,
+    () => CollabIdentityCount,
+    (collabIdentityCount) => collabIdentityCount.identityDetail,
   )
   collabIdentityCount: CollabIdentityCount[];
 
   @OneToMany(
-      () => CollabFollowingDetail,
-      (collabFollowingDetail) => collabFollowingDetail.identityDetail,
+    () => CollabFollowingDetail,
+    (collabFollowingDetail) => collabFollowingDetail.identityDetail,
   )
   collabFollowingDetail: CollabFollowingDetail[];
 
   @OneToMany(
-      () => CollabFollowingDetail,
-      (collabFollowingDetail) => collabFollowingDetail.identityDetail1,
+    () => CollabFollowingDetail,
+    (collabFollowingDetail) => collabFollowingDetail.identityDetail1,
   )
   collabFollowingDetail1: CollabFollowingDetail[];
 
@@ -153,4 +180,3 @@ export class IdentityDetail extends BaseCommonEntity{
   @OneToMany(() => SocialLike, (socialLike) => socialLike.identityDetail)
   socialLike: SocialLike[];
 }
-

@@ -1,30 +1,39 @@
-import {Body, Controller, Delete, Get, Param, Post, Put, Query, Res,} from '@nestjs/common';
-import {SocialService} from './social.service';
-import {Response} from 'express';
-import {CreateCollabFollowingDetailDto} from './dto/create-collab-following.dto';
-import {UpdateCollabFollowingDetailDto} from './dto/update-collab-following.dto';
-import {CreateCollabIdentityCountDto} from './dto/create-collab-identitycount.dto';
-import {UpdateCollabIdentityCountDto} from './dto/update-collab-identitycount.dto';
-import {CreatePromotionDto} from './dto/create-promotion.dto';
-import {UpdatePromotionDto} from './dto/update-promotion.dto';
-import {CreateSocialCommentDto} from './dto/create-social-comment.dto';
-import {UpdateSocialCommentDto} from './dto/update-social-comment.dto';
-import {CreateSocialIdentityCountDto} from './dto/create-social-identity-count.dto';
-import {UpdateSocialIdentityCountDto} from './dto/update-social-identity-count.dto';
-import {CreateSocialLikeDto} from './dto/create-social-like.dto';
-import {UpdateSocialLikeDto} from './dto/update-social-like.dto';
-import {CreateSocialPostDto} from './dto/create-social-post.dto';
-import {UpdateSocialPostDto} from './dto/update-social-post.dto';
-
-import {CollabFollowingDetail} from './entity/collab-following-detail.entity';
-import {CollabIdentityCount} from './entity/collab-identity-count.entity';
-import {SocialComment} from './entity/social-comment.entity';
-import {Promotion} from './entity/promotion.entity';
-import {SocialIdentityCount} from './entity/social-identity-count.entity';
-import {SocialLike} from './entity/social-like.entity';
-import {SocialPost} from './entity/social-post.entity';
-import {LinkType} from "../common/enum";
-import {FindAllPromotionDto} from "./dto/findAllPromotion.dto";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+} from '@nestjs/common';
+import { CreateCollabIdentityCountDto } from './dto/create-collab-identitycount.dto';
+import { UpdateCollabIdentityCountDto } from './dto/update-collab-identitycount.dto';
+import { CreatePromotionDto } from './dto/create-promotion.dto';
+import { UpdatePromotionDto } from './dto/update-promotion.dto';
+import { CreateSocialCommentDto } from './dto/create-social-comment.dto';
+import { UpdateSocialCommentDto } from './dto/update-social-comment.dto';
+import { CreateSocialIdentityCountDto } from './dto/create-social-identity-count.dto';
+import { UpdateSocialIdentityCountDto } from './dto/update-social-identity-count.dto';
+import { CreateSocialLikeDto } from './dto/create-social-like.dto';
+import { UpdateSocialLikeDto } from './dto/update-social-like.dto';
+import { CreateSocialPostDto } from './dto/create-social-post.dto';
+import { UpdateSocialPostDto } from './dto/update-social-post.dto';
+import { Response } from 'express';
+import { CollabFollowingDetail } from './entity/collab-following-detail.entity';
+import { CollabIdentityCount } from './entity/collab-identity-count.entity';
+import { SocialComment } from './entity/social-comment.entity';
+import { Promotion } from './entity/promotion.entity';
+import { SocialIdentityCount } from './entity/social-identity-count.entity';
+import { SocialLike } from './entity/social-like.entity';
+import { SocialPost } from './entity/social-post.entity';
+import { LinkType } from '../common/enum';
+import { FindAllPromotionDto } from './dto/findAllPromotion.dto';
+import { SocialService } from './social.service';
+import { CreateCollabFollowingDetailDto } from './dto/create-collab-following.dto';
+import { UpdateCollabFollowingDetailDto } from './dto/update-collab-following.dto';
 
 @Controller('social')
 export class SocialController {
@@ -40,7 +49,13 @@ export class SocialController {
 
   @Post('save-social-details')
   async saveSocialDetails(
-    @Body() content: { type: 'youtube' | 'instagram' ; channelId: string; username: string; identityId: string }
+    @Body()
+    content: {
+      type: 'youtube' | 'instagram';
+      channelId: string;
+      username: string;
+      identityId: string;
+    },
   ) {
     return this.socialService.saveSocialDetails(content);
   }
@@ -112,7 +127,9 @@ export class SocialController {
   }
 
   @Get('promotion/list')
-  async findAllPromotion(@Body() body:FindAllPromotionDto): Promise<Promotion[]> {
+  async findAllPromotion(
+    @Body() body: FindAllPromotionDto,
+  ): Promise<Promotion[]> {
     return this.socialService.findAllPromotion(body);
   }
 
@@ -122,8 +139,13 @@ export class SocialController {
   }
 
   @Get('promotion/with/identityId')
-  async promotionsWithIdentityId(@Body() body:{identity_id:string,link_type?:LinkType}): Promise<Promotion[]> {
-    return this.socialService.promotionsWithIdentityId(body.identity_id,body.link_type);
+  async promotionsWithIdentityId(
+    @Body() body: { identity_id: string; link_type?: LinkType },
+  ): Promise<Promotion[]> {
+    return this.socialService.promotionsWithIdentityId(
+      body.identity_id,
+      body.link_type,
+    );
   }
 
   @Put('promotion/update/:id')
@@ -199,9 +221,7 @@ export class SocialController {
   }
 
   @Get('is-influencer/:id')
-  async findSocialByIdentityId(
-    @Param('id') id: string,
-  ): Promise<any> {
+  async findSocialByIdentityId(@Param('id') id: string): Promise<any> {
     return this.socialService.findSocialByIdentityId(id);
   }
 
@@ -272,46 +292,49 @@ export class SocialController {
     return this.socialService.removeSocialPost(id);
   }
 
-
   // ........................................................................
 
-    @Get('oauth/url')
-    async getAuthUrl() {
-      return { url: await this.socialService.getAuthUrl() };
-    }
-  
-    @Get('oauth/callback')
-    async handleOAuthCallback(
-      @Query('code') code: string,
-      @Res() res: Response,
-    ): Promise<void> {
-      try {
-        const accessToken = await this.socialService.getAccessToken(code);
-        res.redirect(`/youtube/channel?accessToken=${accessToken}`);
-      } catch (error) {
-        res.status(400).send({ message: 'OAuth callback failed', error });
-      }
-    }
+  @Get('oauth/url')
+  async getAuthUrl() {
+    return { url: await this.socialService.getAuthUrl() };
+  }
 
-    @Get('channel')
-    async getAuthenticatedChannelDetails(@Query('accessToken') accessToken: string): Promise<void> {
-      return await this.socialService.getAuthenticatedChannelDetails(accessToken);
+  @Get('oauth/callback')
+  async handleOAuthCallback(
+    @Query('code') code: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      const accessToken = await this.socialService.getAccessToken(code);
+      res.redirect(`/youtube/channel?accessToken=${accessToken}`);
+    } catch (error) {
+      res.status(400).send({
+        message: 'OAuth callback failed',
+        error,
+      });
     }
-  
-    @Get('channel/videos')
-    async getChannelVideos(
-      @Query('channelId') channelId: string,
-      @Query('accessToken') accessToken: string,
-    ): Promise<void> {
-      return await this.socialService.getVideos(channelId, accessToken);
-    }
-  
-    @Get('video/details')
-    async getVideoDetails(
-      @Query('videoId') videoId: string,
-      @Query('accessToken') accessToken: string,
-    ): Promise<void> {
-      return await this.socialService.getVideoDetails(videoId, accessToken);
-    }
+  }
 
+  @Get('channel')
+  async getAuthenticatedChannelDetails(
+    @Query('accessToken') accessToken: string,
+  ): Promise<void> {
+    return await this.socialService.getAuthenticatedChannelDetails(accessToken);
+  }
+
+  @Get('channel/videos')
+  async getChannelVideos(
+    @Query('channelId') channelId: string,
+    @Query('accessToken') accessToken: string,
+  ): Promise<void> {
+    return await this.socialService.getVideos(channelId, accessToken);
+  }
+
+  @Get('video/details')
+  async getVideoDetails(
+    @Query('videoId') videoId: string,
+    @Query('accessToken') accessToken: string,
+  ): Promise<void> {
+    return await this.socialService.getVideoDetails(videoId, accessToken);
+  }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { InstagramService } from './instagram.service';
 import { GenerateTokenDto } from './dto/generate-token.dto';
 
@@ -11,8 +11,8 @@ export class InstagramController {
     return await this.instagramService.getInstagramLongLivedToken(body);
   }
 
-  @Get('user-data/:accessToken')
-  async getUserData(@Param('accessToken') accessToken: string) {
-    return await this.instagramService.getUserData(accessToken);
+  @Get('user-data')
+  async getUserData(@Body('userId') userId: string) {
+    return await this.instagramService.getUserData(userId);
   }
 }

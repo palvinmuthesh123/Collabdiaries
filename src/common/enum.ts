@@ -1,5 +1,13 @@
-export const identityRelations = ['registration','identitylocation','brandGalleries','notificationSetting','promotions','blockedUsers','blockingUsers']
-
+export const identityRelations = [
+  'registration',
+  'identitylocation',
+  'categories',
+  'brandGalleries',
+  'notificationSetting',
+  'promotions',
+  'blockedUsers',
+  'blockingUsers',
+];
 
 export enum LinkType {
   hyperlink = 'hyperlink',
@@ -29,18 +37,18 @@ export enum NotificationType {
 }
 
 export enum UserStatus {
-  hold='hold',
-  hide='hide',
-  disable='disable',
-  active='active',
+  hold = 'hold',
+  hide = 'hide',
+  disable = 'disable',
+  active = 'active',
 }
 
 export enum BidStatus {
-  received= "received",
-  completed= "completed",
-  accepted= "accepted",
-  rejected= "rejected",
-  terminated= "terminated"
+  received = 'received',
+  completed = 'completed',
+  accepted = 'accepted',
+  rejected = 'rejected',
+  terminated = 'terminated',
 }
 
 export enum ReportType {
@@ -55,9 +63,9 @@ export enum ReportStatus {
 }
 
 export enum Gender {
-  male='male',
-  female='female',
-  other = 'other'
+  male = 'male',
+  female = 'female',
+  other = 'other',
 }
 
 export enum LocationType {
@@ -69,7 +77,6 @@ export enum DealType {
   Barter = 'Barter',
   Paid = 'Paid',
   Unpaid = 'Unpaid',
-
 }
 
 export enum BrandMode {
@@ -77,8 +84,7 @@ export enum BrandMode {
   Offline = 'Offline',
 }
 
-export enum
-UserType {
+export enum UserType {
   Brand = 'Brand',
   CollabUser = 'CollabUser',
 }
@@ -89,8 +95,8 @@ export enum GalleryType {
 }
 
 export enum PromotionType {
-  coupon_code='coupon_code',
-  app_opener ='app_opener'
+  coupon_code = 'coupon_code',
+  app_opener = 'app_opener',
 }
 
 export enum MemberType {
