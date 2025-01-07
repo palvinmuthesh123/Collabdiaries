@@ -1,13 +1,12 @@
 import {
+  IsArray,
+  IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsString,
   IsUUID,
-  IsArray,
-  IsNumber,
-  IsEnum,
 } from 'class-validator';
-import { BidStatus } from 'src/common/enum';
-import { DealType } from '../entity/bid.entity';
+import { BidStatus, DealType } from 'src/common/enum';
 
 export class CreateBidDto {
   @IsNotEmpty()

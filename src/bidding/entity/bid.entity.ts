@@ -1,22 +1,16 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
-  JoinColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Negotiation } from './bid-negotiation.entity';
 import { IdentityDetail } from '../../users/entity/identity-detail.entity';
-import { BidStatus } from 'src/common/enum';
-
-export enum DealType {
-  Barter = 'Barter',
-  Paid = 'Paid',
-  Unpaid = 'Unpaid',
-}
+import { BidStatus, DealType } from 'src/common/enum';
 
 @Entity('bid')
 export class Bid {
@@ -54,11 +48,15 @@ export class Bid {
   @OneToMany(() => Negotiation, (negotiation) => negotiation.bid)
   negotiation: Negotiation[];
 
-  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid, { eager: false })
+  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid, {
+    eager: true,
+  })
   @JoinColumn({ name: 'bidByUserId' })
   identityDetail: IdentityDetail;
 
-  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid1, { eager: false })
+  @ManyToOne(() => IdentityDetail, (identityDetail) => identityDetail.bid1, {
+    eager: true,
+  })
   @JoinColumn({ name: 'bidToUserId' })
   identityDetail1: IdentityDetail;
 }

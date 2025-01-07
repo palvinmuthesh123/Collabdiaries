@@ -2,13 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { JobQueueService } from './job-queue.service';
-import { Bid, DealType } from './entity/bid.entity';
+import { Bid } from './entity/bid.entity';
 import { CreateBidDto } from './dto/create-bid.dto';
 import { UpdateBidDto } from './dto/update-bid.dto';
 import { Negotiation } from './entity/bid-negotiation.entity';
 import { CreateNegotiationDto } from './dto/create-negotiation.dto';
 import { UpdateNegotiationDto } from './dto/update-negotiation.dto';
-import { BidStatus } from 'src/common/enum';
+import { BidStatus, DealType } from 'src/common/enum';
 import { IdentityDetail } from 'src/users/entity/identity-detail.entity';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class BidService {
     private readonly negotiationRepository: Repository<Negotiation>,
     @InjectRepository(IdentityDetail)
     private readonly identityDetailRepository: Repository<IdentityDetail>,
-    private readonly jobQueueService: JobQueueService
+    private readonly jobQueueService: JobQueueService,
   ) {}
 
   //Bid
@@ -35,51 +35,57 @@ export class BidService {
       where: { identity_id: createBidDto.bidByUserId },
     });
     if (!bidByUser) {
-      throw new NotFoundException(`Identity with ID ${createBidDto.bidByUserId} not found`);
+      throw new NotFoundException(
+        `Identity with ID ${createBidDto.bidByUserId} not found`,
+      );
     }
 
     const bidToUser = await this.identityDetailRepository.findOne({
       where: { identity_id: createBidDto.bidToUserId },
     });
     if (!bidToUser) {
-      throw new NotFoundException(`Identity with ID ${createBidDto.bidToUserId} not found`);
+      throw new NotFoundException(
+        `Identity with ID ${createBidDto.bidToUserId} not found`,
+      );
     }
 
     const bid = this.bidRepository.create(createBidDto);
     return await this.bidRepository.save(bid);
   }
 
-    async findAllBid(): Promise<Bid[]> {
+  async findAllBid(): Promise<Bid[]> {
     return await this.bidRepository.find();
   }
 
   async findAllBidByFilter(statusesOrDealTypes?: string[]): Promise<Bid[]> {
-    const query = this.bidRepository.createQueryBuilder('bid');
-  
+    const query = this.bidRepository
+      .createQueryBuilder('bid')
+      .leftJoinAndSelect('bid.identityDetail', 'identityDetail')
+      .leftJoinAndSelect('bid.identityDetail1', 'identityDetail1');
     if (statusesOrDealTypes && statusesOrDealTypes.length > 0) {
-
       const bidStatuses = Object.values(BidStatus);
       const dealTypes = Object.values(DealType);
-  
       const filteredStatuses = statusesOrDealTypes.filter((item) =>
-        bidStatuses.includes(item as BidStatus)
+        bidStatuses.includes(item as BidStatus),
       );
       const filteredDealTypes = statusesOrDealTypes.filter((item) =>
-        dealTypes.includes(item as DealType)
+        dealTypes.includes(item as DealType),
       );
-  
+
       if (filteredStatuses.length > 0) {
-        query.andWhere('bid.requestStatus IN (:...filteredStatuses)', { filteredStatuses });
+        query.andWhere('bid.requestStatus IN (:...filteredStatuses)', {
+          filteredStatuses,
+        });
       }
-  
+
       if (filteredDealTypes.length > 0) {
         query.andWhere(
           `(SELECT COUNT(dealType) FROM UNNEST(bid.dealType) dealType WHERE dealType = ANY(:filteredDealTypes)) > 0`,
-          { filteredDealTypes }
+          { filteredDealTypes },
         );
       }
     }
-  
+
     return await query.getMany();
   }
 
@@ -93,7 +99,7 @@ export class BidService {
 
   async findUserGigs(bidByUserId: string): Promise<Bid[]> {
     const bid = await this.bidRepository.find({
-      where: { 
+      where: {
         bidByUserId,
         requestStatus: BidStatus.accepted,
       },
@@ -138,7 +144,10 @@ export class BidService {
   }
 
   async findAllNegotiation(): Promise<Negotiation[]> {
-    return await this.negotiationRepository.find({ relations: ['bid'], where: { bid: Not(IsNull()) }, });
+    return await this.negotiationRepository.find({
+      relations: ['bid'],
+      where: { bid: Not(IsNull()) },
+    });
     // const results =  await this.negotiationRepository.find({});
     // console.log("RRRRRRRRRRRRRRRRRR")
     // return {}
@@ -157,8 +166,12 @@ export class BidService {
     return negotiation;
   }
 
-  async findUserNegotiation(bid_id: string, negoByUserId: string, negoToUserId: string): Promise<Negotiation[]> {
-    console.log(bid_id, negoByUserId, negoToUserId, "PPPPPPPPPPP")
+  async findUserNegotiation(
+    bid_id: string,
+    negoByUserId: string,
+    negoToUserId: string,
+  ): Promise<Negotiation[]> {
+    console.log(bid_id, negoByUserId, negoToUserId, 'PPPPPPPPPPP');
     const negotiation = await this.negotiationRepository.find({
       where: {
         bid_id,
@@ -170,7 +183,7 @@ export class BidService {
       },
       // relations: ['bid'],
     });
-    console.log(negotiation, "NNNNNNNNNNNNNNN")
+    console.log(negotiation, 'NNNNNNNNNNNNNNN');
     if (!negotiation) {
       throw new NotFoundException(
         `Negotiation with Bid ID ${bid_id}, negoByUserId ${negoByUserId}, negoToUserId ${negoToUserId} not found`,

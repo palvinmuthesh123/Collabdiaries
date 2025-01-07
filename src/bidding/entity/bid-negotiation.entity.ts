@@ -1,14 +1,14 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { Bid, DealType } from './bid.entity';
 import { BidStatus } from 'src/common/enum';
+import { Bid } from './bid.entity';
 
 @Entity('negotiation')
 export class Negotiation {
