@@ -1,18 +1,11 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateIdentityLocationDto {
-  @ApiProperty({
-    description: 'UUID of the identity associated with this location',
-  })
-  @IsNotEmpty()
-  @IsString()
-  identity_id: string;
-
+export class UpdateLocationDto {
   @ApiProperty({ description: 'Full address of the location' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  address: string;
+  address?: string;
 
   @ApiProperty({ description: 'Landmark near the location' })
   @IsOptional()
@@ -20,27 +13,27 @@ export class CreateIdentityLocationDto {
   landmark?: string;
 
   @ApiProperty({ description: 'City of the location' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  city: string;
+  city?: string;
 
   @ApiProperty({ description: 'State of the location' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  state: string;
+  state?: string;
 
   @ApiProperty({ description: 'Country of the location' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  country: string;
+  country?: string;
 
   @ApiProperty({ description: 'Latitude of the location' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber({}, { message: 'Latitude must be a number' })
-  latitude: number;
+  latitude?: number;
 
   @ApiProperty({ description: 'Longitude of the location' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber({}, { message: 'Longitude must be a number' })
-  longitude: number;
+  longitude?: number;
 }

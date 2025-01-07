@@ -1,10 +1,7 @@
 // export class Entity {}
-import {Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn,} from 'typeorm';
-import {IdentityDetail} from '../../users/entity/identity-detail.entity';
-import {Gallery} from '../../users/entity/gallery.entity';
-import {IdentityLocation} from '../../users/entity/location.entity';
-import {Gender, UserStatus} from "../../common/enum";
-import {BaseCommonEntity} from "../../common/base.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { IdentityDetail } from '../../users/entity/identity-detail.entity';
+import { Gallery } from '../../users/entity/gallery.entity';
 import { GroupStatus } from '../dto/create-group.dto';
 
 @Entity('group')
@@ -31,16 +28,18 @@ export class Group {
   created_by: string;
 
   // Relationships
-  @OneToMany(
-    () => Gallery, (userGallery) => userGallery.registration)
+  @OneToMany(() => Gallery, (userGallery) => userGallery.registration)
   userGalleries: Gallery[];
 
-  @OneToMany(() => IdentityDetail, (identityDetail) => identityDetail.registration)
+  @OneToMany(
+    () => IdentityDetail,
+    (identityDetail) => identityDetail.registration,
+  )
   identityDetails: IdentityDetail[];
 
   // @ManyToMany(() => IdentityDetail, (identityDetail) => identityDetail.registration)
   // identityDetail: IdentityDetail[];
 
-  @OneToMany(() => IdentityLocation, (identitylocation) => identitylocation.registration)
-  identitylocation: IdentityLocation[];
+  // @OneToMany(() => IdentityLocation, (identitylocation) => identitylocation.registration)
+  // identitylocation: IdentityLocation[];
 }

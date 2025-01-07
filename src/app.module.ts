@@ -18,6 +18,7 @@ import { ProductModule } from './product/product.module';
 import { MemberModule } from './member/member.module';
 import { PageModule } from './page/page.module';
 import { InstagramModule } from './instagram/instagram.module';
+import { YoutubeModule } from './youtube/youtube.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { InstagramModule } from './instagram/instagram.module';
     MemberModule,
     PageModule,
     InstagramModule,
+    YoutubeModule,
   ],
 })
 export class AppModule {}

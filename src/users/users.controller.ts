@@ -11,35 +11,34 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import {ConfigService} from '@nestjs/config';
-import {UsersService} from './users.service';
-import {CreateIdentityDetailDto} from './dto/identity/create-identity-detail.dto';
-import {UpdateIdentityDetailDto} from './dto/identity/update-identity-detail.dto';
-import {CreateIdentityLocationDto} from './dto/location/create-identity-location.dto';
-import {UpdateRegistrationsDto} from './dto/registrations/update-registration.dto';
-import {IdentityLocation} from './entity/location.entity';
-import {IdentityDetail} from './entity/identity-detail.entity';
-import {Registration} from './entity/registration.entity';
-import {Gallery} from './entity/gallery.entity';
-import {S3Service} from '../utils/s3.service';
-import {ApiOperation, ApiTags} from '@nestjs/swagger';
-import {UpdateStatusDto} from "../common/common-dto";
-import {BlockRegisterDto} from "./dto/registrations/block-register.dto";
-import {UpdateRegistrationProfileDto} from "./dto/registrations/update-registration-profile.dto";
-import {VerifyUsernameDto} from "./dto/registrations/verify-username.dto";
-import {UpdateDealTypeDto} from "./dto/identity/update-deal-type.dto";
-import {UpdateBrandModeDto} from "./dto/identity/update-brand-mode.dto";
-import {UpdateBrandOwnershipDto} from "./dto/identity/update-brand-ownership";
-import {UpdateBrandLocationDto} from "./dto/location/update-brand-location.dto";
-import {UpdateUserLocationDto} from "./dto/location/update-user-location.dto";
-import {UpdateRegistrationCoverImageDto} from "./dto/registrations/update-registration-cover-image.dto";
-import {UpdateIdentityProfileDto} from "./dto/identity/update-identity-profile.dto";
-import {JwtAuthGuard} from "../auth/jwt-auth.guard";
-import {UpdateIdentityCoverImageDto} from "./dto/identity/update-identity-cover-image.dto";
-import {NearbyBrandAndInfluencerDto} from "./dto/location/nearby-influencer.dto";
-import {CreateBrandGalleryDto} from "./dto/gallery/create-brand-gallery.dto";
-import {CreateUserGalleryDto} from "./dto/gallery/create-user-gallery.dto";
-import {UpdateGalleryDto} from "./dto/gallery/update-gallery.dto";
+import { ConfigService } from '@nestjs/config';
+import { UsersService } from './users.service';
+import { CreateIdentityDetailDto } from './dto/identity/create-identity-detail.dto';
+import { UpdateIdentityDetailDto } from './dto/identity/update-identity-detail.dto';
+import { CreateIdentityLocationDto } from './dto/location/create-identity-location.dto';
+import { UpdateRegistrationsDto } from './dto/registrations/update-registration.dto';
+import { IdentityLocation } from './entity/location.entity';
+import { IdentityDetail } from './entity/identity-detail.entity';
+import { Registration } from './entity/registration.entity';
+import { Gallery } from './entity/gallery.entity';
+import { S3Service } from '../utils/s3.service';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UpdateStatusDto } from '../common/common-dto';
+import { BlockRegisterDto } from './dto/registrations/block-register.dto';
+import { UpdateRegistrationProfileDto } from './dto/registrations/update-registration-profile.dto';
+import { VerifyUsernameDto } from './dto/registrations/verify-username.dto';
+import { UpdateDealTypeDto } from './dto/identity/update-deal-type.dto';
+import { UpdateBrandModeDto } from './dto/identity/update-brand-mode.dto';
+import { UpdateBrandOwnershipDto } from './dto/identity/update-brand-ownership';
+import { UpdateRegistrationCoverImageDto } from './dto/registrations/update-registration-cover-image.dto';
+import { UpdateIdentityProfileDto } from './dto/identity/update-identity-profile.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UpdateIdentityCoverImageDto } from './dto/identity/update-identity-cover-image.dto';
+import { NearbyBrandAndInfluencerDto } from './dto/location/nearby-influencer.dto';
+import { CreateBrandGalleryDto } from './dto/gallery/create-brand-gallery.dto';
+import { CreateUserGalleryDto } from './dto/gallery/create-user-gallery.dto';
+import { UpdateGalleryDto } from './dto/gallery/update-gallery.dto';
+import { UpdateLocationDto } from './dto/location/update-location.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -53,35 +52,27 @@ export class UsersController {
   // @UseGuards(JwtAuthGuard)
   @Get('registration/verifyUsername')
   @ApiOperation({ summary: 'verify username of user' })
-  async verifyUsername(@Body() body:VerifyUsernameDto):Promise<boolean> {
-   return  this.usersService.verifyUsername(body);
+  async verifyUsername(@Body() body: VerifyUsernameDto): Promise<boolean> {
+    return this.usersService.verifyUsername(body);
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Get('presigned-url')
-  // @ApiOperation({ summary: 'Getting presigned url for file upload to Aws s3' })
-  // async getPresignedUrl(@Query('fileName') fileName: string) {
-  //   if (!fileName) {
-  //     throw new BadRequestException('File name must be provided');
-  //   }
-  //   const bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
-  //   const url = await this.s3Service.getPreSignedUrl(bucketName, fileName);
-  //   return { url };
-  // }
-
   @Get('presigned-urls')
-  @ApiOperation({ summary: 'Getting presigned URLs for multiple file uploads to AWS S3' })
-  async getPresignedUrls(@Body() body:{fileNames: string[]}) {
+  @ApiOperation({
+    summary:
+      'Getting presigned URLs for multiple file uploads to AWS S3 bucket',
+  })
+  async getPresignedUrls(@Body() body: { fileNames: string[] }) {
     if (!body.fileNames || body.fileNames.length === 0) {
       throw new BadRequestException('File names must be provided');
     }
     const bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
     const urls = await Promise.all(
-        body.fileNames.map((fileName) => this.s3Service.getPreSignedUrl(bucketName, fileName))
+      body.fileNames.map((fileName) =>
+        this.s3Service.getPreSignedUrl(bucketName, fileName),
+      ),
     );
     return { urls };
   }
-
 
   // @UseGuards(JwtAuthGuard)
   @Get('registrations')
@@ -113,45 +104,60 @@ export class UsersController {
   @Put('update/registration/status/:id')
   @ApiOperation({ summary: 'Status Updating registration' })
   async updateRegistrationStatus(
-      @Param('id') id: string,
-      @Body() updateRegistrationStatusDto: UpdateStatusDto,
+    @Param('id') id: string,
+    @Body() updateRegistrationStatusDto: UpdateStatusDto,
   ): Promise<Registration> {
-    return this.usersService.updateRegistrationStatus(id, updateRegistrationStatusDto);
+    return this.usersService.updateRegistrationStatus(
+      id,
+      updateRegistrationStatusDto,
+    );
   }
 
   // @UseGuards(JwtAuthGuard)
   @Put('update/registration/profile/:id')
   @ApiOperation({ summary: 'Status Updating registration' })
   async updateRegistrationProfile(
-      @Param('id') id: string,
-      @Body() updateRegistrationProfileDto: UpdateRegistrationProfileDto,
+    @Param('id') id: string,
+    @Body() updateRegistrationProfileDto: UpdateRegistrationProfileDto,
   ): Promise<Registration> {
-    return this.usersService.updateRegistrationProfile(id, updateRegistrationProfileDto);
+    return this.usersService.updateRegistrationProfile(
+      id,
+      updateRegistrationProfileDto,
+    );
   }
 
   // @UseGuards(JwtAuthGuard)
   @Put('update/registration/cover/:id')
   @ApiOperation({ summary: 'Status Updating registration' })
   async updateUserCoverImage(
-      @Param('id') id: string,
-      @Body() updateUserCoverImageDto: UpdateRegistrationCoverImageDto,
+    @Param('id') id: string,
+    @Body() updateUserCoverImageDto: UpdateRegistrationCoverImageDto,
   ): Promise<Registration> {
-    return this.usersService.updateRegistrationCoverImage(id, updateUserCoverImageDto);
+    return this.usersService.updateRegistrationCoverImage(
+      id,
+      updateUserCoverImageDto,
+    );
   }
 
   // @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'block_user' })
   @Put('block/:id')
-  async blockUser( @Param('id') id: string,@Body() blockRegisterDto: BlockRegisterDto):Promise<{message:string}> {
-    await this.usersService.blockUser(id,blockRegisterDto);
+  async blockUser(
+    @Param('id') id: string,
+    @Body() blockRegisterDto: BlockRegisterDto,
+  ): Promise<{ message: string }> {
+    await this.usersService.blockUser(id, blockRegisterDto);
     return { message: 'User has been blocked successfully' };
   }
 
   // @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'unblock_user' })
   @Put('unblock/:id')
-  async unblockUser(@Param('id') id: string,@Body() blockRegisterDto: BlockRegisterDto):Promise<{message:string}>  {
-    await this.usersService.unBlockUser(id,blockRegisterDto);
+  async unblockUser(
+    @Param('id') id: string,
+    @Body() blockRegisterDto: BlockRegisterDto,
+  ): Promise<{ message: string }> {
+    await this.usersService.unBlockUser(id, blockRegisterDto);
     return { message: 'User has been unblocked successfully' };
   }
 
@@ -168,7 +174,7 @@ export class UsersController {
   @Post('identity-detail')
   @ApiOperation({ summary: 'Creating identity details' })
   async createIdentityDetail(
-      @Body() createIdentityDetailDto: CreateIdentityDetailDto,
+    @Body() createIdentityDetailDto: CreateIdentityDetailDto,
   ): Promise<IdentityDetail> {
     return this.usersService.createIdentityDetail(createIdentityDetailDto);
   }
@@ -203,7 +209,7 @@ export class UsersController {
   // @UseGuards(JwtAuthGuard)
   @Get('identity-detail/:id')
   @ApiOperation({ summary: 'Fetching single identity/brand with id' })
-  async findOne(@Param('id') id: string,): Promise<IdentityDetail> {
+  async findOne(@Param('id') id: string): Promise<IdentityDetail> {
     return this.usersService.findOne(id);
   }
 
@@ -211,8 +217,8 @@ export class UsersController {
   @Put('update/identity-detail/:id')
   @ApiOperation({ summary: 'Updating identity related information' })
   async updateIdentityDetail(
-      @Param('id') id: string,
-      @Body() updateIdentityDetailDto: UpdateIdentityDetailDto,
+    @Param('id') id: string,
+    @Body() updateIdentityDetailDto: UpdateIdentityDetailDto,
   ): Promise<IdentityDetail> {
     return this.usersService.updateIdentityDetail(id, updateIdentityDetailDto);
   }
@@ -221,8 +227,8 @@ export class UsersController {
   @Put('update/deal/type/:id')
   @ApiOperation({ summary: 'Updating deal type' })
   async updateDealType(
-      @Param('id') id: string,
-      @Body() updateDealTypeDto: UpdateDealTypeDto,
+    @Param('id') id: string,
+    @Body() updateDealTypeDto: UpdateDealTypeDto,
   ): Promise<boolean> {
     return this.usersService.updateDealType(id, updateDealTypeDto);
   }
@@ -231,20 +237,20 @@ export class UsersController {
   @Put('update/brand/mode/:id')
   @ApiOperation({ summary: 'Updating deal type' })
   async updateBrandMode(
-      @Param('id') id: string,
-      @Body() updateDealTypeDto: UpdateBrandModeDto,
+    @Param('id') id: string,
+    @Body() updateDealTypeDto: UpdateBrandModeDto,
   ): Promise<boolean> {
     return this.usersService.updateBrandMode(id, updateDealTypeDto);
   }
 
   // @UseGuards(JwtAuthGuard)
-@Put('brand/ownership/transfer')
-@ApiOperation({ summary: 'Ownership of brand transferred to other user' })
-async transferOwnership(
+  @Put('brand/ownership/transfer')
+  @ApiOperation({ summary: 'Ownership of brand transferred to other user' })
+  async transferOwnership(
     @Body('newOwnerDetails') newOwnerDetails: UpdateBrandOwnershipDto,
-): Promise<string> {
-  return await this.usersService.transferBrandOwnership( newOwnerDetails);
-}
+  ): Promise<string> {
+    return await this.usersService.transferBrandOwnership(newOwnerDetails);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('brand/list/')
@@ -259,30 +265,39 @@ async transferOwnership(
   @Put('update/identity/profile/:id')
   @ApiOperation({ summary: 'profile image Updating identity' })
   async updateIdentityProfileImage(
-      @Param('id') id: string,
-      @Body() updateIdentityProfileDto: UpdateIdentityProfileDto,
+    @Param('id') id: string,
+    @Body() updateIdentityProfileDto: UpdateIdentityProfileDto,
   ): Promise<IdentityDetail> {
-    return this.usersService.updateIdentityProfileImage(id, updateIdentityProfileDto);
+    return this.usersService.updateIdentityProfileImage(
+      id,
+      updateIdentityProfileDto,
+    );
   }
 
   // @UseGuards(JwtAuthGuard)
   @Put('update/identity/cover/:id')
   @ApiOperation({ summary: ' Cover image Updating identity' })
   async updateIdentityCoverImage(
-      @Param('id') id: string,
-      @Body() updateUserCoverImageDto: UpdateIdentityCoverImageDto,
+    @Param('id') id: string,
+    @Body() updateUserCoverImageDto: UpdateIdentityCoverImageDto,
   ): Promise<IdentityDetail> {
-    return this.usersService.updateIdentityCoverImage(id, updateUserCoverImageDto);
+    return this.usersService.updateIdentityCoverImage(
+      id,
+      updateUserCoverImageDto,
+    );
   }
 
   // @UseGuards(JwtAuthGuard)
   @Put('update/identity/status/:id')
   @ApiOperation({ summary: 'Status Updating identity details' })
   async updateIdentityDetailStatus(
-      @Param('id') id: string,
-      @Body() updateIdentityDetailsStatusDto: UpdateStatusDto,
+    @Param('id') id: string,
+    @Body() updateIdentityDetailsStatusDto: UpdateStatusDto,
   ): Promise<IdentityDetail> {
-    return this.usersService.updateIdentityDetailStatus(id, updateIdentityDetailsStatusDto);
+    return this.usersService.updateIdentityDetailStatus(
+      id,
+      updateIdentityDetailsStatusDto,
+    );
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -292,22 +307,15 @@ async transferOwnership(
     return this.usersService.softDeleteIdentityDetail(id);
   }
 
-// Start Identity-location controller =============================================================================
+  // Start Identity-location controller =============================================================================
 
   // @UseGuards(JwtAuthGuard)
-  @Post('create/brand/location')
+  @Post('location/create')
   @ApiOperation({ summary: 'Creating identity location' })
-  async createBrandLocation(
+  async createLocation(
     @Body() createIdentityLocationDto: CreateIdentityLocationDto,
-  ): Promise<IdentityLocation> {
-    return this.usersService.createBrandLocation(createIdentityLocationDto);
-  }
-
-  // @UseGuards(JwtAuthGuard)
-  @Post('create/user/location')
-  @ApiOperation({ summary: 'Creating identity location' })
-  async createUserLocation(@Body() createIdentityLocationDto: CreateIdentityLocationDto,): Promise<IdentityLocation[]> {
-    return this.usersService.createUserLocation(createIdentityLocationDto);
+  ): Promise<IdentityLocation | IdentityLocation[]> {
+    return this.usersService.createLocation(createIdentityLocationDto);
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -321,7 +329,7 @@ async transferOwnership(
   @Get('location/:id')
   @ApiOperation({ summary: 'Fetching identity location by id' })
   async findOneIdentityLocation(
-      @Param('id') id: string,
+    @Param('id') id: string,
   ): Promise<IdentityLocation> {
     return this.usersService.findOneIdentityLocation(id);
   }
@@ -329,31 +337,29 @@ async transferOwnership(
   // @UseGuards(JwtAuthGuard)
   @Get('nearby-influencer')
   @ApiOperation({ summary: 'Fetching all nearby influencer' })
-  async findAllNearbyInfluencer(@Body() body: NearbyBrandAndInfluencerDto): Promise<IdentityLocation[]> {
+  async findAllNearbyInfluencer(
+    @Body() body: NearbyBrandAndInfluencerDto,
+  ): Promise<IdentityLocation[]> {
     return this.usersService.findAllNearbyInfluencer(body);
   }
 
   // @UseGuards(JwtAuthGuard)
   @Get('nearby-brand')
   @ApiOperation({ summary: 'Fetching all Nearby brand details' })
-  async findAllNearbyBrandDetail(@Body() body:NearbyBrandAndInfluencerDto): Promise<IdentityDetail[]> {
+  async findAllNearbyBrandDetail(
+    @Body() body: NearbyBrandAndInfluencerDto,
+  ): Promise<IdentityDetail[]> {
     return this.usersService.findAllNearbyBrandDetail(body);
   }
 
   // @UseGuards(JwtAuthGuard)
-  @Put('update/brand/location')
+  @Put('location/update/:id')
   @ApiOperation({ summary: 'Updating identity location' })
-  async updateBrandLocation(
-    @Body() updateBrandLocationDto: UpdateBrandLocationDto,
+  async updateLocation(
+    @Param('id') id: string,
+    @Body() body: UpdateLocationDto,
   ): Promise<IdentityLocation> {
-    return this.usersService.updateBrandLocation(updateBrandLocationDto,);
-  }
-
-  // @UseGuards(JwtAuthGuard)
-  @Put('update/user/location')
-  @ApiOperation({ summary: 'Updating identity location' })
-  async updateUserLocation(@Body() updateUserLocationDto: UpdateUserLocationDto): Promise<IdentityLocation> {
-    return this.usersService.updateUserLocation(updateUserLocationDto,);
+    return this.usersService.updateLocation(id, body);
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -368,14 +374,18 @@ async transferOwnership(
   // @UseGuards(JwtAuthGuard)
   @Post('create/brand/gallery')
   @ApiOperation({ summary: 'Creating brand gallery' })
-  async createBrandGallery(@Body() body: CreateBrandGalleryDto,): Promise<Gallery> {
+  async createBrandGallery(
+    @Body() body: CreateBrandGalleryDto,
+  ): Promise<Gallery> {
     return this.usersService.createBrandGallery(body);
   }
 
   // @UseGuards(JwtAuthGuard)
   @Post('create/user/gallery')
   @ApiOperation({ summary: 'Creating brand gallery' })
-  async createUserGallery(@Body() body: CreateUserGalleryDto,): Promise<Gallery> {
+  async createUserGallery(
+    @Body() body: CreateUserGalleryDto,
+  ): Promise<Gallery> {
     return this.usersService.createUserGallery(body);
   }
 
@@ -389,21 +399,21 @@ async transferOwnership(
   // @UseGuards(JwtAuthGuard)
   @Get('gallery/:id')
   @ApiOperation({ summary: 'Get single gallery' })
-  async findOneGallery(@Param('id') id:string): Promise<Gallery> {
+  async findOneGallery(@Param('id') id: string): Promise<Gallery> {
     return this.usersService.findOneGallery(id);
   }
 
   // @UseGuards(JwtAuthGuard)
   @Put('addGalleryImage')
   @ApiOperation({ summary: 'Update ' })
-  async addGalleryImage(@Body() body: UpdateGalleryDto,): Promise<Gallery> {
+  async addGalleryImage(@Body() body: UpdateGalleryDto): Promise<Gallery> {
     return this.usersService.addGalleryImage(body);
   }
 
   // @UseGuards(JwtAuthGuard)
   @Put('removeGalleryImage')
   @ApiOperation({ summary: 'Update ' })
-  async removeGalleryImage(@Body() body: UpdateGalleryDto,): Promise<Gallery> {
+  async removeGalleryImage(@Body() body: UpdateGalleryDto): Promise<Gallery> {
     return this.usersService.removeGalleryImage(body);
   }
 
