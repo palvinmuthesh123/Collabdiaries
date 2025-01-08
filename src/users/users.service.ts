@@ -83,24 +83,31 @@ export class UsersService {
     return !!getBrandUsername;
   }
 
-  async findAllRegistration(search: string): Promise<Registration[]> {
-    const queryBuilder =
-      this.registrationRepository.createQueryBuilder('registration');
+  async findAllRegistration(search?: string): Promise<Registration[]> {
+    const queryBuilder = this.registrationRepository.createQueryBuilder('registration');
+  
     queryBuilder
       .where('registration.is_deleted = :isDeleted', { isDeleted: false })
       .andWhere('registration.status IN (:...statuses)', {
         statuses: [UserStatus.active, UserStatus.hold, UserStatus.disable],
-      });
+      })
+      .leftJoinAndSelect(
+        'registration.identityDetails',
+        'identityDetails'
+      );
+  
     if (search) {
       queryBuilder.andWhere(
-        '(LOWER(registration.name) LIKE :search OR LOWER(registration.user_name) LIKE :search)',
+        `(LOWER(registration.name) LIKE :search 
+        OR LOWER(registration.user_name) LIKE :search
+        OR LOWER(registration.email) LIKE :search
+        OR LOWER(identityDetails.brand_name) LIKE :search
+        OR LOWER(identityDetails.user_name) LIKE :search
+        OR LOWER(identityDetails.user_type) LIKE :search)`,
         { search: `%${search.toLowerCase()}%` },
       );
     }
-    queryBuilder.leftJoinAndSelect(
-      'registration.identityDetails',
-      'identityDetails',
-    );
+  
     return await queryBuilder.getMany();
   }
 

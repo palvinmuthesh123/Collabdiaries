@@ -1,13 +1,13 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { YouTubeService } from './youtube.service';
 
 @Controller('youtube')
 export class YouTubeController {
   constructor(private readonly youTubeService: YouTubeService) {}
 
-  @Get('channel/:channelId')
-  async getChannelData(@Param('channelId') channelId: string) {
-    return await this.youTubeService.getChannelData(channelId);
+  @Get('stats')
+  async getStats(@Query('accessToken') accessToken: string) {
+    return this.youTubeService.getYouTubeChannels(accessToken);
   }
 
   @Get('videos/:channelId')

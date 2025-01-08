@@ -85,7 +85,6 @@ export class BidService {
         );
       }
     }
-
     return await query.getMany();
   }
 

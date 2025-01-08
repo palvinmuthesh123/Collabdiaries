@@ -1,33 +1,33 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {Repository} from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-import {CollabFollowingDetail} from './entity/collab-following-detail.entity';
-import {CollabIdentityCount} from './entity/collab-identity-count.entity';
-import {Promotion} from './entity/promotion.entity';
-import {SocialComment} from './entity/social-comment.entity';
-import {SocialIdentityCount} from './entity/social-identity-count.entity';
-import {SocialLike} from './entity/social-like.entity';
-import {SocialPost} from './entity/social-post.entity';
+import { CollabFollowingDetail } from './entity/collab-following-detail.entity';
+import { CollabIdentityCount } from './entity/collab-identity-count.entity';
+import { Promotion } from './entity/promotion.entity';
+import { SocialComment } from './entity/social-comment.entity';
+import { SocialIdentityCount } from './entity/social-identity-count.entity';
+import { SocialLike } from './entity/social-like.entity';
+import { SocialPost } from './entity/social-post.entity';
 
-import {CreateCollabFollowingDetailDto} from './dto/create-collab-following.dto';
-import {UpdateCollabFollowingDetailDto} from './dto/update-collab-following.dto';
-import {CreateCollabIdentityCountDto} from './dto/create-collab-identitycount.dto';
-import {UpdateCollabIdentityCountDto} from './dto/update-collab-identitycount.dto';
-import {CreatePromotionDto} from './dto/create-promotion.dto';
-import {UpdatePromotionDto} from './dto/update-promotion.dto';
-import {CreateSocialCommentDto} from './dto/create-social-comment.dto';
-import {UpdateSocialCommentDto} from './dto/update-social-comment.dto';
-import {CreateSocialIdentityCountDto} from './dto/create-social-identity-count.dto';
-import {UpdateSocialIdentityCountDto} from './dto/update-social-identity-count.dto';
-import {CreateSocialLikeDto} from './dto/create-social-like.dto';
-import {UpdateSocialLikeDto} from './dto/update-social-like.dto';
-import {CreateSocialPostDto} from './dto/create-social-post.dto';
-import {UpdateSocialPostDto} from './dto/update-social-post.dto';
+import { CreateCollabFollowingDetailDto } from './dto/create-collab-following.dto';
+import { UpdateCollabFollowingDetailDto } from './dto/update-collab-following.dto';
+import { CreateCollabIdentityCountDto } from './dto/create-collab-identitycount.dto';
+import { UpdateCollabIdentityCountDto } from './dto/update-collab-identitycount.dto';
+import { CreatePromotionDto } from './dto/create-promotion.dto';
+import { UpdatePromotionDto } from './dto/update-promotion.dto';
+import { CreateSocialCommentDto } from './dto/create-social-comment.dto';
+import { UpdateSocialCommentDto } from './dto/update-social-comment.dto';
+import { CreateSocialIdentityCountDto } from './dto/create-social-identity-count.dto';
+import { UpdateSocialIdentityCountDto } from './dto/update-social-identity-count.dto';
+import { CreateSocialLikeDto } from './dto/create-social-like.dto';
+import { UpdateSocialLikeDto } from './dto/update-social-like.dto';
+import { CreateSocialPostDto } from './dto/create-social-post.dto';
+import { UpdateSocialPostDto } from './dto/update-social-post.dto';
 import * as https from 'https';
-import {OAuth2Client} from 'google-auth-library';
-import {LinkType} from "../common/enum";
-import {FindAllPromotionDto} from "./dto/findAllPromotion.dto";
+import { OAuth2Client } from 'google-auth-library';
+import { LinkType } from '../common/enum';
+import { FindAllPromotionDto } from './dto/findAllPromotion.dto';
 
 @Injectable()
 export class SocialService {
@@ -36,7 +36,7 @@ export class SocialService {
   private readonly CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET;
   private readonly REDIRECT_URI = process.env.YOUTUBE_REDIRECT_URI;
   private oauth2Client: OAuth2Client;
-  
+
   constructor(
     @InjectRepository(CollabFollowingDetail)
     private readonly collabFollowingDetailRepository: Repository<CollabFollowingDetail>,
@@ -150,25 +150,34 @@ export class SocialService {
     return await this.collabIdentityCountRepository.find();
   }
 
-  async fetchData(endpoint: string, type: 'youtube' | 'instagram'): Promise<any> {
+  async fetchData(
+    endpoint: string,
+    type: 'youtube' | 'instagram',
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const options = {
-        hostname: type === 'youtube' ? process.env.YOUTUBE_API_HOST : process.env.INSTAGRAM_API_HOST,
+        hostname:
+          type === 'youtube'
+            ? process.env.YOUTUBE_API_HOST
+            : process.env.INSTAGRAM_API_HOST,
         path: endpoint,
         method: 'GET',
         headers: {
-          'x-rapidapi-host': type === 'youtube' ? process.env.YOUTUBE_API_HOST : process.env.INSTAGRAM_API_HOST,
+          'x-rapidapi-host':
+            type === 'youtube'
+              ? process.env.YOUTUBE_API_HOST
+              : process.env.INSTAGRAM_API_HOST,
           'x-rapidapi-key': process.env.YOUTUBE_API_KEY,
         },
       };
-  
+
       const req = https.request(options, (res) => {
         let data = '';
-  
+
         res.on('data', (chunk) => {
           data += chunk;
         });
-  
+
         res.on('end', () => {
           try {
             const jsonData = JSON.parse(data);
@@ -178,45 +187,57 @@ export class SocialService {
           }
         });
       });
-  
+
       req.on('error', (error) => {
         reject(new Error(`Error making API request: ${error.message}`));
       });
-  
+
       req.end();
     });
   }
 
-  async saveSocialDetails(content: { type: 'youtube' | 'instagram' ; channelId: string; username: string; identityId: string; }): Promise<any> {
+  async saveSocialDetails(content: {
+    type: 'youtube' | 'instagram';
+    channelId: string;
+    username: string;
+    identityId: string;
+  }): Promise<any> {
     try {
       const endpoint =
         content.type === 'youtube'
           ? `/channels?id=${content.channelId}&part=snippet%2CcontentDetails%2Cstatistics`
           : `/api/instagram/users/info/${content.username}/username`;
-  
-      const response = content.type === 'youtube'
-        ? await this.fetchData(endpoint, 'youtube')
-        : await this.fetchData(endpoint, 'instagram');
-  
+
+      const response =
+        content.type === 'youtube'
+          ? await this.fetchData(endpoint, 'youtube')
+          : await this.fetchData(endpoint, 'instagram');
+
       if (!response || (content.type === 'youtube' && !response.items)) {
-        throw new NotFoundException(`${content.type === 'youtube' ? 'Channel' : 'Account'} not found`);
+        throw new NotFoundException(
+          `${content.type === 'youtube' ? 'Channel' : 'Account'} not found`,
+        );
       }
-  
-      const newFollowerCount = content.type === 'youtube'
-        ? Number(response.items.statistics.subscriberCount || 0)
-        : Number(response.user.follower_count || 0);
-  
-      const newFollowingCount = content.type === 'instagram'
-        ? Number(response.user.following_count || 0)
-        : 0;
-  
+
+      const newFollowerCount =
+        content.type === 'youtube'
+          ? Number(response.items.statistics.subscriberCount || 0)
+          : Number(response.user.follower_count || 0);
+
+      const newFollowingCount =
+        content.type === 'instagram'
+          ? Number(response.user.following_count || 0)
+          : 0;
+
       const existingRecord = await this.socialIdentityCountRepository.findOne({
         where: { identity_id: content.identityId },
       });
-  
+
       if (existingRecord) {
-        existingRecord.follower_count = Number(existingRecord.follower_count || 0) + newFollowerCount;
-        existingRecord.following_count = Number(existingRecord.following_count || 0) + newFollowingCount;
+        existingRecord.follower_count =
+          Number(existingRecord.follower_count || 0) + newFollowerCount;
+        existingRecord.following_count =
+          Number(existingRecord.following_count || 0) + newFollowingCount;
         return await this.socialIdentityCountRepository.save(existingRecord);
       } else {
         const params = {
@@ -225,11 +246,16 @@ export class SocialService {
           following_count: newFollowingCount,
           engagement_rate: 0,
         };
-        const socialIdentityCount = this.socialIdentityCountRepository.create(params);
-        return await this.socialIdentityCountRepository.save(socialIdentityCount);
+        const socialIdentityCount =
+          this.socialIdentityCountRepository.create(params);
+        return await this.socialIdentityCountRepository.save(
+          socialIdentityCount,
+        );
       }
     } catch (error) {
-      throw new NotFoundException(`Error fetching ${content.type === 'youtube' ? 'channel' : 'Instagram'} details`);
+      throw new NotFoundException(
+        `Error fetching ${content.type === 'youtube' ? 'channel' : 'Instagram'} details`,
+      );
     }
   }
 
@@ -262,8 +288,8 @@ export class SocialService {
     return await this.promotionRepository.save(promotion);
   }
 
-  async findAllPromotion(input:FindAllPromotionDto): Promise<Promotion[]> {
-    const {isHide,identity_id}=input
+  async findAllPromotion(input: FindAllPromotionDto): Promise<Promotion[]> {
+    const { isHide, identity_id } = input;
     const whereConditions: any = {};
     if (isHide) whereConditions.isHide = isHide;
     if (identity_id) whereConditions.identity_id = identity_id;
@@ -282,16 +308,25 @@ export class SocialService {
     return promotion;
   }
 
-  async promotionsWithIdentityId(identity_id:string,link_type:LinkType):Promise<Promotion[]>{
-    if (!identity_id) throw new NotFoundException('identity_id is required')
-    const promotions = await this.promotionRepository.find({where:{identity_id:identity_id}})
-    if (link_type === LinkType.hyperlink){
-      return promotions.filter((promo)=>promo.link_type === LinkType.hyperlink)
+  async promotionsWithIdentityId(
+    identity_id: string,
+    link_type: LinkType,
+  ): Promise<Promotion[]> {
+    if (!identity_id) throw new NotFoundException('identity_id is required');
+    const promotions = await this.promotionRepository.find({
+      where: { identity_id: identity_id },
+    });
+    if (link_type === LinkType.hyperlink) {
+      return promotions.filter(
+        (promo) => promo.link_type === LinkType.hyperlink,
+      );
     }
-    if (link_type === LinkType.linktree){
-      return promotions.filter((promo)=>promo.link_type === LinkType.linktree)
+    if (link_type === LinkType.linktree) {
+      return promotions.filter(
+        (promo) => promo.link_type === LinkType.linktree,
+      );
     }
-    return promotions
+    return promotions;
   }
 
   async updatePromotion(
@@ -413,14 +448,13 @@ export class SocialService {
       });
     if (!socialIdentityCount) {
       return {
-        influencer: false
-      }
+        influencer: false,
+      };
     }
-    if(socialIdentityCount.follower_count>1000) {
-      Object.assign(socialIdentityCount, {influencer: true})
-    }
-    else {
-      Object.assign(socialIdentityCount, {influencer: false})
+    if (socialIdentityCount.follower_count > 1000) {
+      Object.assign(socialIdentityCount, { influencer: true });
+    } else {
+      Object.assign(socialIdentityCount, { influencer: false });
     }
     return socialIdentityCount;
   }
@@ -542,23 +576,25 @@ export class SocialService {
         headers: { Authorization: `Bearer ${accessToken}` },
       };
 
-      https.get(url, options, (res) => {
-        let data = '';
+      https
+        .get(url, options, (res) => {
+          let data = '';
 
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
 
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(data));
-          } catch (error) {
-            reject(error);
-          }
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(data));
+            } catch (error) {
+              reject(error);
+            }
+          });
+        })
+        .on('error', (error) => {
+          reject(error);
         });
-      }).on('error', (error) => {
-        reject(error);
-      });
     });
   }
 
@@ -571,10 +607,9 @@ export class SocialService {
     const url = `${this.API_URL}/search?part=snippet&channelId=${channelId}&maxResults=10&order=date&type=video`;
     return await this.fetchData1(url, accessToken);
   }
-
+  io;
   async getVideoDetails(videoId: string, accessToken: string) {
     const url = `${this.API_URL}/videos?part=snippet,statistics,contentDetails&id=${videoId}`;
     return await this.fetchData1(url, accessToken);
   }
-
 }

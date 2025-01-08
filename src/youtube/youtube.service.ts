@@ -1,26 +1,40 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
+import { lastValueFrom } from 'rxjs';
+
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class YouTubeService {
+  constructor(private readonly httpService: HttpService) {}
   private readonly baseUrl = 'https://www.googleapis.com/youtube/v3';
-  private readonly apiKey = 'AIzaSyBDBnmdYW4RoSmH1QBAlZUT9L6rdbKXmH0'; // Replace with your API key
+  private readonly apiKey = 'AIzaSyBDBnmdYW4RoSmH1QBAlZUT9L6rdbKXmH0';
 
-  // Fetch channel data
-  async getChannelData(channelId: string) {
-    const url = `${this.baseUrl}/channels?part=snippet,statistics&id=${channelId}&key=${this.apiKey}`;
+  async getYouTubeChannels(accessToken: string) {
+    // YouTube API endpoint to get the authenticated user's channel details
+    const url =
+      'https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&mine=true';
     try {
-      const response = await axios.get(url);
+      const response = await lastValueFrom(
+        this.httpService.get(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+      );
       const channel = response.data.items[0];
+      const channelId = channel.id;
       const { title, description } = channel.snippet;
       const { viewCount, subscriberCount, videoCount } = channel.statistics;
-
-      return { title, description, viewCount, subscriberCount, videoCount };
+      return {
+        channelId,
+        title,
+        description,
+        viewCount,
+        subscriberCount,
+        videoCount,
+      };
     } catch (error) {
-      throw new HttpException(
-        'Failed to fetch channel data',
-        HttpStatus.BAD_REQUEST,
-      );
+      console.error('Error fetching YouTube channel details:', error);
+      throw error;
     }
   }
 
@@ -30,11 +44,9 @@ export class YouTubeService {
     try {
       const searchResponse = await axios.get(searchUrl);
       const videoIds = searchResponse.data.items.map((item) => item.id.videoId);
-
       const videosUrl = `${this.baseUrl}/videos?part=contentDetails,statistics&id=${videoIds.join(',')}&key=${this.apiKey}`;
       const videosResponse = await axios.get(videosUrl);
       const videos = videosResponse.data.items;
-
       // Separate shorts and longs
       const shorts = [];
       const longs = [];
@@ -46,7 +58,6 @@ export class YouTubeService {
           longs.push(video);
         }
       }
-
       return { shorts, longs };
     } catch (error) {
       throw new HttpException(
@@ -56,7 +67,6 @@ export class YouTubeService {
     }
   }
 
-  // Parse ISO 8601 duration (PT#M#S) to seconds
   private parseDuration(duration: string): number {
     const match = duration.match(/PT(\d+M)?(\d+S)?/);
     const minutes = match[1] ? parseInt(match[1]) : 0;
